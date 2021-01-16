@@ -37,7 +37,7 @@
         </el-table-column>
         <el-table-column prop="propertyisSKU" label="是否为sku属性" >
           <template slot-scope="scope">
-            {{ scope.row.propertyisSKU==1?'是':scope.row.bookType==2?'否':'待定'}}
+            {{ scope.row.propertyisSKU==1?'是':scope.row.propertyisSKU==2?'否':'待定'}}
           </template>
         </el-table-column>
         <el-table-column prop="propertycreateDate" label="创建时间"></el-table-column>
@@ -86,7 +86,44 @@
           <el-button type="primary" @click="addProperty('addPropertyForm')">确 定</el-button>
         </div>
       </el-dialog>
-
+      <!--  修改-->
+      <el-dialog title="修改" :visible.sync="updatebutton">
+        <!--      表单部分-->
+        <el-form :model="updatePropertyForm"  ref="updatePropertyForm" >
+          <el-form-item label="属性名称" :label-width="formLabelWidth" prop="propertyname">
+            <el-input v-model="updatePropertyForm.propertyname" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="属性中文名" :label-width="formLabelWidth" prop="propertynameCH">
+            <el-input v-model="updatePropertyForm.propertynameCH" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId">
+            <div align="left">
+              <el-select v-model="updatePropertyForm.propertytypeId" placeholder="属性分类" style="width: 300px">
+                <el-option :label="category.property_category_name"  :value="category.id" v-for="(category,index) in propertycategory" :key="index"></el-option>
+              </el-select>
+            </div>
+          </el-form-item>
+          <el-form-item label="属性类型" :label-width="formLabelWidth" prop="propertytype">
+            <el-radio v-model="updatePropertyForm.propertytype" :label="1">下拉框</el-radio>
+            <el-radio v-model="updatePropertyForm.propertytype" :label="2">单选框</el-radio>
+            <el-radio v-model="updatePropertyForm.propertytype" :label="3">复选框</el-radio>
+            <el-radio v-model="updatePropertyForm.propertytype" :label="4">输入框</el-radio>
+          </el-form-item>
+          <el-form-item label="属性是否sku属性" :label-width="formLabelWidth" prop="propertyisSKU">
+            <el-radio v-model="updatePropertyForm.propertyisSKU" :label="1">是</el-radio>
+            <el-radio v-model="updatePropertyForm.propertyisSKU" :label="2">否</el-radio>
+          </el-form-item>
+          <el-form-item label="属性是否删除" :label-width="formLabelWidth" prop="propertyisSKU">
+            <el-radio v-model="updatePropertyForm.propertyisDel" :label="1">是</el-radio>
+            <el-radio v-model="updatePropertyForm.propertyisDel" :label="2">否</el-radio>
+          </el-form-item>
+        </el-form>
+        <!--      按钮部分-->
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="updateoff('updateBrandForm')">取 消</el-button>
+          <el-button type="primary" @click="updateBrand()">确 定</el-button>
+        </div>
+      </el-dialog>
 
     </div>
 </template>
@@ -96,6 +133,18 @@
         name: "",
         data(){
             return {
+                // 添加按钮
+                updatebutton:false,
+                // 添加数据
+                updatePropertyForm:{
+                    propertyid:'',
+                    propertyname:'',
+                    propertynameCH:'',
+                    propertytypeId:'',
+                    propertytype:'',
+                    propertyisSKU:'',
+                    propertyisDel:'',
+                },
                 // 添加按钮
                 addbutton:false,
                 // 添加数据
@@ -144,7 +193,7 @@
                       self.property=res.data.data.propertylist;
                       self.total=res.data.data.count;
                   }else if(res.data.code==120){
-                      self.$message({showClose: true,message: '查询失败！',type: 'error'});
+                      self.$message.error(res.data.message);
                   }
               }).catch(function () {
                   self.$message({showClose: true,message: '查询失败！',type: 'error'});
@@ -157,7 +206,7 @@
                   if(res.data.code==110){
                       self.propertycategory=res.data.data;
                   }else if(res.data.code==120){
-                      self.$message({showClose: true,message: '查询失败！',type: 'error'});
+                      self.$message.error(res.data.message);
                   }
               }).catch(function () {
                   self.$message({showClose: true,message: '查询失败！',type: 'error'});
@@ -182,6 +231,36 @@
                     }
                 }).catch(function () {
                     self.$message.error('数据错误');
+                })
+            },
+            // 修改回显
+            hx(row){
+                this.updatePropertyForm = JSON.parse(JSON.stringify(row));
+                this.updatePropertyForm.propertyid=row.propertyid;
+                this.updatePropertyForm.propertyname=row.propertyname;
+                this.updatePropertyForm.propertynameCH=row.propertynameCH;
+                this.updatePropertyForm.propertytypeId=row.propertytypeId;
+                this.updatePropertyForm.propertytype=row.propertytype;
+                this.updatePropertyForm.propertyisSKU=row.propertyisSKU;
+                this.updatePropertyForm.propertyisDel=row.propertyisDel;
+                this.updatebutton=true;
+            },
+            // 修改取消
+            updateoff(aa){
+                this.updatebutton=false;
+            },
+            // 修改
+            updateBrand(){
+                var self = this;
+                this.$axios.put("api/api/property/update", this.$qs.stringify(this.updatePropertyForm)).then(function (res) {
+                    if (res.data.code == 110) {
+                        self.$message({showClose: true,message: '修改成功！',type: 'success'});
+                        self.updatePropertyForm={};
+                        self.updatebutton=false;
+                        self.getData();
+                    }else if(res.data.code == 120){
+                        self.$message.error(res.data.message);
+                    }
                 })
             },
 

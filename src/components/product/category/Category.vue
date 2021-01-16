@@ -59,8 +59,6 @@
       :default-expand-all="true">
     </el-tree>
 <!--    -->
-
-
     <el-dialog title="添加" :visible.sync="dialogFormVisible" width="35%">
       <!--      表单部分-->
       <el-form :model="addCategorydata"  ref="addCategorydata" prop="addCategorydata" >

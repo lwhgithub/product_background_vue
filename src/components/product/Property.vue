@@ -1,5 +1,9 @@
 <template>
-    <diV>
+    <div>
+      <!--  添加按钮-->
+      <div style="float: right">
+        <el-button type="success" @click="addbutton = true" plain>添加</el-button>
+      </div>
       <!--  分页-->
       <div class="block" align="center">
         <!--      style="float:right"-->
@@ -25,7 +29,7 @@
         <!--    fixed    固定为第一列-->
         <el-table-column prop="propertyname" label="属性名" > </el-table-column>
         <el-table-column prop="propertynameCH" label="属性中文名" > </el-table-column>
-        <el-table-column prop="name" label="属性分类" ></el-table-column>
+        <el-table-column prop="property_category_name" label="属性分类" ></el-table-column>
         <el-table-column prop="propertytype" label="属性类型" >
           <template slot-scope="scope">
             {{ scope.row.propertytype==1?'下拉框':scope.row.propertytype==2?'单选框':scope.row.propertytype==3?'复选框':scope.row.propertytype==4?'输入框':'未知'}}
@@ -48,8 +52,43 @@
           </template>
         </el-table-column>
       </el-table>
+      <!--  添加-->
+      <el-dialog title="添加" :visible.sync="addbutton">
+        <!--      表单部分-->
+        <el-form :model="addPropertyForm"  ref="addPropertyForm" >
+          <el-form-item label="属性名称" :label-width="formLabelWidth" prop="propertyname">
+            <el-input v-model="addPropertyForm.propertyname" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="属性中文名" :label-width="formLabelWidth" prop="propertynameCH">
+            <el-input v-model="addPropertyForm.propertynameCH" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId">
+            <div align="left">
+              <el-select v-model="addPropertyForm.propertytypeId" placeholder="属性分类" style="width: 300px">
+                <el-option :label="category.property_category_name"  :value="category.id" v-for="(category,index) in propertycategory" :key="index"></el-option>
+              </el-select>
+            </div>
+          </el-form-item>
+          <el-form-item label="属性类型" :label-width="formLabelWidth" prop="propertytype">
+            <el-radio v-model="addPropertyForm.propertytype" :label="1">下拉框</el-radio>
+            <el-radio v-model="addPropertyForm.propertytype" :label="2">单选框</el-radio>
+            <el-radio v-model="addPropertyForm.propertytype" :label="3">复选框</el-radio>
+            <el-radio v-model="addPropertyForm.propertytype" :label="4">输入框</el-radio>
+          </el-form-item>
+          <el-form-item label="属性是否sku属性" :label-width="formLabelWidth" prop="propertyisSKU">
+            <el-radio v-model="addPropertyForm.propertyisSKU" :label="1">是</el-radio>
+            <el-radio v-model="addPropertyForm.propertyisSKU" :label="2">否</el-radio>
+          </el-form-item>
+        </el-form>
+        <!--      按钮部分-->
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="addoff('addPropertyForm')">取 消</el-button>
+          <el-button type="primary" @click="addProperty('addPropertyForm')">确 定</el-button>
+        </div>
+      </el-dialog>
 
-    </diV>
+
+    </div>
 </template>
 
 <script>
@@ -57,6 +96,16 @@
         name: "",
         data(){
             return {
+                // 添加按钮
+                addbutton:false,
+                // 添加数据
+                addPropertyForm:{
+                    propertyname:'',
+                    propertynameCH:'',
+                    propertytypeId:'',
+                    propertytype:'',
+                    propertyisSKU:'',
+                },
                 //商品分类查询结果
                 propertycategory:[],
                 // 查询结果
@@ -87,28 +136,54 @@
             }
         },
         methods:{
+            // 查询
             getData(){
                 var self=this;
               this.$axios.get("api/api/property/getData?"+this.$qs.stringify(this.paging)).then(function (res) {
-                  if(res.data.code=110){
+                  if(res.data.code==110){
                       self.property=res.data.data.propertylist;
                       self.total=res.data.data.count;
+                  }else if(res.data.code==120){
+                      self.$message({showClose: true,message: '查询失败！',type: 'error'});
                   }
               }).catch(function () {
-
+                  self.$message({showClose: true,message: '查询失败！',type: 'error'});
               })
             },
+            //查询分类
             getPropertyCategory(){
                 var self=this;
-              this.$axios.get("api/api/type/getPropertyCategory").then(function (res) {
-                  if(res.data.code=110){
+              this.$axios.get("api/api/property/getPropertyCategory").then(function (res) {
+                  if(res.data.code==110){
                       self.propertycategory=res.data.data;
+                  }else if(res.data.code==120){
+                      self.$message({showClose: true,message: '查询失败！',type: 'error'});
                   }
               }).catch(function () {
-
+                  self.$message({showClose: true,message: '查询失败！',type: 'error'});
               })
             },
-
+            // 添加取消
+            addoff(addPropertyForm){
+                this.$refs[addPropertyForm].resetFields();
+                this.addbutton=false;
+            },
+            // 添加
+            addProperty (addPropertyForm) {
+                var self = this;
+                this.$axios.post("api/api/property/add", this.$qs.stringify(this.addPropertyForm)).then(function (res) {
+                    if (res.data.code == 110) {
+                        self.$message({showClose: true,message: '添加成功！',type: 'success'});
+                        self.$refs[addPropertyForm].resetFields();
+                        self.addbutton=false;
+                        self.getData();
+                    }else if(res.data.code == 120){
+                        self.$message.error(res.data.message);
+                    }
+                }).catch(function () {
+                    self.$message.error('数据错误');
+                })
+            },
 
 
             //切换每一页的条数时触发

@@ -72,7 +72,7 @@
         <template slot-scope="scope">
           <el-row>
             <el-button type="primary" icon="el-icon-edit" @click="hx(scope.row)" circle></el-button>
-            <el-button type="success" @click="updatePrice(scope.row)" plain>属性值</el-button>
+            <el-button type="success" @click="getPropertyPrice(scope.row)" plain>属性值</el-button>
           </el-row>
         </template>
       </el-table-column>
@@ -149,20 +149,40 @@
         <el-button type="primary" @click="updateBrand()">确 定</el-button>
       </div>
     </el-dialog>
-    <!--  修改属性值-->
-    <el-dialog title="修改" :visible.sync="updatePricebutton">
+    <!--  属性值展示-->
+    <el-dialog title="属性值展示" :visible.sync="propertyPricebutton">
+      <div style="float: right">
+        <el-button type="success" @click="addpricebutton = true" plain>添加属性值</el-button>
+        <el-button type="success" @click="propertyPricebutton=false" plain>关闭</el-button>
+      </div>
       <el-table :data="updatePriceForm" border style="width: 100%;">
         <el-table-column prop="propertynameCH" label="属性名" > </el-table-column>
         <el-table-column prop="propertyPriceNameCH" label="属性值名" > </el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
             <el-row>
-              <el-button type="primary" icon="el-icon-edit" circle></el-button>
-              <el-button type="success"  plain>属性值</el-button>
+              <el-button type="success" @click="updatePrice(scope.row)" plain>修改</el-button>
             </el-row>
           </template>
         </el-table-column>
       </el-table>
+    </el-dialog>
+    <!--  添加-->
+    <el-dialog title="属性值添加" :visible.sync="addpricebutton">
+      <!--      表单部分-->
+      <el-form :model="addPriceForm"  ref="addPriceForm" >
+        <el-form-item label="属性值名称" :label-width="formLabelWidth" prop="propertyPriceName">
+          <el-input v-model="addPriceForm.propertyPriceName" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="属性值中文名" :label-width="formLabelWidth" prop="propertyPriceNameCH">
+          <el-input v-model="addPriceForm.propertyPriceNameCH" autocomplete="off"></el-input>
+        </el-form-item>
+      </el-form>
+      <!--      按钮部分-->
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="addPriceoff('addPriceForm')">取 消</el-button>
+        <el-button type="primary" @click="addPrice('addPriceForm')">确 定</el-button>
+      </div>
     </el-dialog>
 
   </div>
@@ -197,10 +217,27 @@
                 },
 
                 //查询属性值按钮
-                updatePricebutton:false,
+                propertyPricebutton:false,
                 //查询属性值数据
-                updatePriceForm:[
-                ],
+                updatePriceForm:[],
+                //属性值添加按钮
+                addpricebutton:false,
+                //属性值添加数据
+                addPriceForm:{
+                    propertyPriceName:'',
+                    propertyPriceNameCH:'',
+                    propertyId:'',
+                },
+                //属性值添加按钮
+                addpricebutton:false,
+                //属性值添加数据
+                addPriceForm:{
+
+                    propertyPriceName:'',
+                    propertyPriceNameCH:'',
+                    propertyId:'',
+                },
+
                 //商品分类查询结果
                 propertycategory:[],
                 // 商品属性查询结果
@@ -315,20 +352,46 @@
                     }
                 })
             },
-            //修改属性值
-            updatePrice(row){
+            //查询属性值
+            getPropertyPrice(row){
                 var self = this;
                 var propertyid=row.propertyid;
                 this.$axios.get("api/api/property/getPropertyPrice?"+this.$qs.stringify({"propertyid":propertyid})).then(function (res) {
                     if(res.data.code==110){
                         self.updatePriceForm=res.data.data;
+                        self.addPriceForm.propertyId=row.propertyid;
                     }else if(res.data.code==120){
                         self.$message.error(res.data.message);
                     }
-                }).catch(function () {
-                    self.$message({showClose: true,message: '查询失败！',type: 'success'});
+                }).catch(function (res) {
+                    self.$message({showClose: true,message: '查询失败！',type: 'error'});
                 })
-                this.updatePricebutton=true;
+                this.propertyPricebutton=true;
+            },
+            // 属性值添加取消
+            addPriceoff(addPriceForm){
+                this.$refs[addPriceForm].resetFields();
+                this.addpricebutton=false;
+            },
+            // 属性值添加
+            addPrice (addPriceForm) {
+                var self = this;
+                console.log(this.addPriceForm);
+                this.$axios.post("api/api/property/addPrice", this.$qs.stringify(this.addPriceForm)).then(function (res) {
+                    if (res.data.code == 110) {
+                        self.$message({showClose: true,message: '添加成功！',type: 'success'});
+                        self.$refs[addPriceForm].resetFields();
+                        self.addpricebutton=false;
+                    }else if(res.data.code == 120){
+                        self.$message.error(res.data.message);
+                    }
+                }).catch(function () {
+                    self.$message({showClose: true,message: '添加失败！',type: 'error'});
+                })
+            },
+            //属性值回显
+            updatePrice(row){
+                this.
             },
             //切换每一页的条数时触发
             handleSizeChange(val) {

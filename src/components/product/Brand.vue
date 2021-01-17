@@ -63,25 +63,30 @@
       <el-dialog title="添加" :visible.sync="addbutton">
         <!--      表单部分-->
         <el-form :model="addBrandForm"  ref="addBrandForm" >
-          <el-form-item label="品牌名称" :label-width="formLabelWidth" prop="bookName">
+          <el-form-item label="品牌名称" :label-width="formLabelWidth" prop="brandname">
             <el-input v-model="addBrandForm.brandname" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="品牌首字母" :label-width="formLabelWidth" prop="bookName">
+          <el-form-item label="品牌首字母" :label-width="formLabelWidth" prop="brandE">
             <el-input v-model="addBrandForm.brandE" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="品牌介绍" :label-width="formLabelWidth" prop="bookName">
+          <el-form-item label="品牌介绍" :label-width="formLabelWidth" prop="brandDesc">
             <el-input type="textarea" v-model="addBrandForm.brandDesc" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="排序字段" :label-width="formLabelWidth" prop="bookName">
+          <el-form-item label="排序字段" :label-width="formLabelWidth" prop="brandord">
             <el-input v-model="addBrandForm.brandord" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="图片" :label-width="formLabelWidth" prop="carimgPath">
+          <el-form-item label="图片" :label-width="formLabelWidth" prop="brandimgpath">
             <div align="left">
               <el-upload class="upload-demo" drag action="api/api/brand/uploadFile"
-                         :on-success="adduploadSuccess" :on-remove="addfiledelete" :file-list="filelist" ref="upload" multiple>
-                <i class="el-icon-upload"></i>
-                <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
-                <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div>
+                         :on-success="adduploadSuccess" :on-remove="addfiledelete" :file-list="filelist" ref="addupload" multiple>
+                <div v-if="addBrandForm.brandimgpath==''">
+                   <i class="el-icon-upload"></i>
+                  <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
+                  <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div>
+                </div>
+                <div v-else>
+                  <img :src="addBrandForm.brandimgpath" width="360px" height="180px">
+                </div>
               </el-upload>
             </div>
           </el-form-item>
@@ -122,7 +127,7 @@
            <el-form-item label="图片" :label-width="formLabelWidth" prop="updatecarimgPath">
              <div align="left">
                <el-upload class="upload-demo" drag action="api/api/brand/uploadFile"
-                          :on-success="updateuploadSuccess" :on-remove="updatefiledelete" :file-list="filelist" ref="upload" multiple>
+                          :on-success="updateuploadSuccess" :on-remove="updatefiledelete" :file-list="filelist" ref="updateupload" multiple>
                  <i class="el-icon-upload"></i>
                  <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
                  <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div>
@@ -190,7 +195,6 @@
         methods:{
             getData(){
               var self=this;
-              console.log(this.paging.pagingSize)
               this.$axios.get("api/api/brand/getData?"+this.$qs.stringify(this.paging)).then(function (res) {
                   if(res.data.code==110){
                       self.brand=res.data.data.brandlist;
@@ -219,6 +223,7 @@
             // 添加取消
             addoff(addBrandForm){
                 this.$refs[addBrandForm].resetFields();
+                this.$refs.addupload.clearFiles();
                 this.addbutton=false;
             },
             // 添加
@@ -228,6 +233,7 @@
                     if (res.data.code == 110) {
                         self.$message({showClose: true,message: '添加成功！',type: 'success'});
                         self.$refs[formName].resetFields();
+                        self.$refs.addupload.clearFiles();
                         self.addbutton=false;
                         self.getData();
                     }else if(res.data.code == 120){
@@ -260,7 +266,7 @@
                     if (res.data.code == 110) {
                         self.$message({showClose: true,message: '修改成功！',type: 'success'});
                         self.updateBrandForm={};
-                        self.$refs.upload.clearFiles();
+                        self.$refs.updateupload.clearFiles();
                         self.updatebutton=false;
                         self.getData();
                     }else if(res.data.code == 120){
@@ -276,6 +282,8 @@
             },
             //添加文件列表移除文件时的钩子
             addfiledelete(file, fileList){
+                console.log(file);
+                console.log(fileList);
                 this.addBrandForm.brandimgpath="";
                 this.$message.success("图片已清除");
             },

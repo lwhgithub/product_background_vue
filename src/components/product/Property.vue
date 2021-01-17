@@ -72,7 +72,7 @@
         <template slot-scope="scope">
           <el-row>
             <el-button type="primary" icon="el-icon-edit" @click="hx(scope.row)" circle></el-button>
-            <!--              <el-button type="danger" icon="el-icon-delete" @click="del(scope.row)" circle></el-button>-->
+            <el-button type="success" @click="updatePrice(scope.row)" plain>属性值</el-button>
           </el-row>
         </template>
       </el-table-column>
@@ -145,9 +145,24 @@
       </el-form>
       <!--      按钮部分-->
       <div slot="footer" class="dialog-footer">
-        <el-button @click="updateoff('updateBrandForm')">取 消</el-button>
+        <el-button @click="updateoff()">取 消</el-button>
         <el-button type="primary" @click="updateBrand()">确 定</el-button>
       </div>
+    </el-dialog>
+    <!--  修改属性值-->
+    <el-dialog title="修改" :visible.sync="updatePricebutton">
+      <el-table :data="updatePriceForm" border style="width: 100%;">
+        <el-table-column prop="propertynameCH" label="属性名" > </el-table-column>
+        <el-table-column prop="propertyPriceNameCH" label="属性值名" > </el-table-column>
+        <el-table-column label="操作">
+          <template slot-scope="scope">
+            <el-row>
+              <el-button type="primary" icon="el-icon-edit" circle></el-button>
+              <el-button type="success"  plain>属性值</el-button>
+            </el-row>
+          </template>
+        </el-table-column>
+      </el-table>
     </el-dialog>
 
   </div>
@@ -159,18 +174,6 @@
         data(){
             return {
                 // 添加按钮
-                updatebutton:false,
-                // 添加数据
-                updatePropertyForm:{
-                    propertyid:'',
-                    propertyname:'',
-                    propertynameCH:'',
-                    propertytypeId:'',
-                    propertytype:'',
-                    propertyisSKU:'',
-                    propertyisDel:'',
-                },
-                // 添加按钮
                 addbutton:false,
                 // 添加数据
                 addPropertyForm:{
@@ -180,9 +183,27 @@
                     propertytype:'',
                     propertyisSKU:'',
                 },
+                // 修改按钮
+                updatebutton:false,
+                // 修改数据
+                updatePropertyForm:{
+                    propertyid:'',
+                    propertyname:'',
+                    propertynameCH:'',
+                    propertytypeId:'',
+                    propertytype:'',
+                    propertyisSKU:'',
+                    propertyisDel:'',
+                },
+
+                //查询属性值按钮
+                updatePricebutton:false,
+                //查询属性值数据
+                updatePriceForm:[
+                ],
                 //商品分类查询结果
                 propertycategory:[],
-                // 查询结果
+                // 商品属性查询结果
                 property:[],
                 //分页条件查询
                 currentPage4: 0,
@@ -261,7 +282,7 @@
                         self.$message.error(res.data.message);
                     }
                 }).catch(function () {
-                    self.$message.error('数据错误');
+                    self.$message({showClose: true,message: '添加失败！',type: 'success'});
                 })
             },
             // 修改回显
@@ -277,7 +298,7 @@
                 this.updatebutton=true;
             },
             // 修改取消
-            updateoff(aa){
+            updateoff(){
                 this.updatebutton=false;
             },
             // 修改
@@ -294,8 +315,21 @@
                     }
                 })
             },
-
-
+            //修改属性值
+            updatePrice(row){
+                var self = this;
+                var propertyid=row.propertyid;
+                this.$axios.get("api/api/property/getPropertyPrice?"+this.$qs.stringify({"propertyid":propertyid})).then(function (res) {
+                    if(res.data.code==110){
+                        self.updatePriceForm=res.data.data;
+                    }else if(res.data.code==120){
+                        self.$message.error(res.data.message);
+                    }
+                }).catch(function () {
+                    self.$message({showClose: true,message: '查询失败！',type: 'success'});
+                })
+                this.updatePricebutton=true;
+            },
             //切换每一页的条数时触发
             handleSizeChange(val) {
                 this.paging.pagingSize=(val);
@@ -315,7 +349,8 @@
         created(){
             this.getData();
             this.getPropertyCategory();
-        },watch:{
+        },
+        watch:{
             addbutton:function(){
                 if(this.addbutton==false){
                     this.addPropertyForm={};

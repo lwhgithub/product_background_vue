@@ -284,6 +284,12 @@
         created(){
             this.getData();
             this.getPropertyCategory();
+        },watch:{
+            addbutton:function(){
+                if(this.addbutton==false){
+                    this.addPropertyForm={};
+                }
+            }
         },
     }
 </script>

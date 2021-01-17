@@ -1,131 +1,156 @@
 <template>
-    <div>
-      <!--  添加按钮-->
-      <div style="float: right">
-        <el-button type="success" @click="addbutton = true" plain>添加</el-button>
-      </div>
-      <!--  分页-->
-      <div class="block" align="center">
-        <!--      style="float:right"-->
-        <el-pagination
-          @size-change="handleSizeChange"
-          @current-change="handleCurrentChange"
-          :current-page="currentPage4"
-          :page-sizes="xsts"
-          :page-size="100"
-          layout="total, sizes, prev, pager, next, jumper"
-          :total="total"
-        >
-        </el-pagination>
-      </div>
-      <!--  查询展示-->
-      <el-table :data="property" border style="width: 100%;" @selection-change="handleSelectionChange" >
-        <el-table-column type="selection" width="50"></el-table-column>
-        <el-table-column label="展示序号" width="80" >
-          <template slot-scope="scope">
-            {{ scope.$index+1}}
-          </template>
-        </el-table-column>
-        <!--    fixed    固定为第一列-->
-        <el-table-column prop="propertyname" label="属性名" > </el-table-column>
-        <el-table-column prop="propertynameCH" label="属性中文名" > </el-table-column>
-        <el-table-column prop="property_category_name" label="属性分类" ></el-table-column>
-        <el-table-column prop="propertytype" label="属性类型" >
-          <template slot-scope="scope">
-            {{ scope.row.propertytype==1?'下拉框':scope.row.propertytype==2?'单选框':scope.row.propertytype==3?'复选框':scope.row.propertytype==4?'输入框':'未知'}}
-          </template>
-        </el-table-column>
-        <el-table-column prop="propertyisSKU" label="是否为sku属性" >
-          <template slot-scope="scope">
-            {{ scope.row.propertyisSKU==1?'是':scope.row.propertyisSKU==2?'否':'待定'}}
-          </template>
-        </el-table-column>
-        <el-table-column prop="propertycreateDate" label="创建时间"></el-table-column>
-        <el-table-column prop="propertyupdateDate" label="修改时间"></el-table-column>
-        <el-table-column prop="propertyauthor" label="操作人"></el-table-column>
-        <el-table-column label="操作">
-          <template slot-scope="scope">
-            <el-row>
-              <el-button type="primary" icon="el-icon-edit" @click="hx(scope.row)" circle></el-button>
-              <!--              <el-button type="danger" icon="el-icon-delete" @click="del(scope.row)" circle></el-button>-->
-            </el-row>
-          </template>
-        </el-table-column>
-      </el-table>
-      <!--  添加-->
-      <el-dialog title="添加" :visible.sync="addbutton">
-        <!--      表单部分-->
-        <el-form :model="addPropertyForm"  ref="addPropertyForm" >
-          <el-form-item label="属性名称" :label-width="formLabelWidth" prop="propertyname">
-            <el-input v-model="addPropertyForm.propertyname" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="属性中文名" :label-width="formLabelWidth" prop="propertynameCH">
-            <el-input v-model="addPropertyForm.propertynameCH" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId">
-            <div align="left">
-              <el-select v-model="addPropertyForm.propertytypeId" placeholder="属性分类" style="width: 300px">
-                <el-option :label="category.property_category_name"  :value="category.id" v-for="(category,index) in propertycategory" :key="index"></el-option>
-              </el-select>
-            </div>
-          </el-form-item>
-          <el-form-item label="属性类型" :label-width="formLabelWidth" prop="propertytype">
-            <el-radio v-model="addPropertyForm.propertytype" :label="1">下拉框</el-radio>
-            <el-radio v-model="addPropertyForm.propertytype" :label="2">单选框</el-radio>
-            <el-radio v-model="addPropertyForm.propertytype" :label="3">复选框</el-radio>
-            <el-radio v-model="addPropertyForm.propertytype" :label="4">输入框</el-radio>
-          </el-form-item>
-          <el-form-item label="属性是否sku属性" :label-width="formLabelWidth" prop="propertyisSKU">
-            <el-radio v-model="addPropertyForm.propertyisSKU" :label="1">是</el-radio>
-            <el-radio v-model="addPropertyForm.propertyisSKU" :label="2">否</el-radio>
-          </el-form-item>
-        </el-form>
-        <!--      按钮部分-->
-        <div slot="footer" class="dialog-footer">
-          <el-button @click="addoff('addPropertyForm')">取 消</el-button>
-          <el-button type="primary" @click="addProperty('addPropertyForm')">确 定</el-button>
-        </div>
-      </el-dialog>
-      <!--  修改-->
-      <el-dialog title="修改" :visible.sync="updatebutton">
-        <!--      表单部分-->
-        <el-form :model="updatePropertyForm"  ref="updatePropertyForm" >
-          <el-form-item label="属性名称" :label-width="formLabelWidth" prop="propertyname">
-            <el-input v-model="updatePropertyForm.propertyname" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="属性中文名" :label-width="formLabelWidth" prop="propertynameCH">
-            <el-input v-model="updatePropertyForm.propertynameCH" autocomplete="off"></el-input>
-          </el-form-item>
-          <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId">
-            <div align="left">
-              <el-select v-model="updatePropertyForm.propertytypeId" placeholder="属性分类" style="width: 300px">
-                <el-option :label="category.property_category_name"  :value="category.id" v-for="(category,index) in propertycategory" :key="index"></el-option>
-              </el-select>
-            </div>
-          </el-form-item>
-          <el-form-item label="属性类型" :label-width="formLabelWidth" prop="propertytype">
-            <el-radio v-model="updatePropertyForm.propertytype" :label="1">下拉框</el-radio>
-            <el-radio v-model="updatePropertyForm.propertytype" :label="2">单选框</el-radio>
-            <el-radio v-model="updatePropertyForm.propertytype" :label="3">复选框</el-radio>
-            <el-radio v-model="updatePropertyForm.propertytype" :label="4">输入框</el-radio>
-          </el-form-item>
-          <el-form-item label="属性是否sku属性" :label-width="formLabelWidth" prop="propertyisSKU">
-            <el-radio v-model="updatePropertyForm.propertyisSKU" :label="1">是</el-radio>
-            <el-radio v-model="updatePropertyForm.propertyisSKU" :label="2">否</el-radio>
-          </el-form-item>
-          <el-form-item label="属性是否删除" :label-width="formLabelWidth" prop="propertyisSKU">
-            <el-radio v-model="updatePropertyForm.propertyisDel" :label="1">是</el-radio>
-            <el-radio v-model="updatePropertyForm.propertyisDel" :label="2">否</el-radio>
-          </el-form-item>
-        </el-form>
-        <!--      按钮部分-->
-        <div slot="footer" class="dialog-footer">
-          <el-button @click="updateoff('updateBrandForm')">取 消</el-button>
-          <el-button type="primary" @click="updateBrand()">确 定</el-button>
-        </div>
-      </el-dialog>
-
+  <div>
+    <!--  条件查询-->
+    <el-form  :inline="true" v-model="paging" ref="queryform" >
+      <el-form-item label="属性中文名">
+        <el-input placeholder="属性中文名" v-model="paging.propertynameCH" style="width: 100%;"></el-input>
+      </el-form-item>
+      <el-form-item label="属性分类">
+        <el-select v-model="paging.propertytypeId" placeholder="属性分类" style="width: 230px">
+          <el-option :label="category.property_category_name"  :value="category.id" v-for="(category,index) in propertycategory" :key="index"></el-option>
+        </el-select>
+      </el-form-item>
+      <el-form-item label="属性类型" :label-width="formLabelWidth" prop="propertytype">
+        <el-radio v-model="paging.propertytype" :label="1">下拉框</el-radio>
+        <el-radio v-model="paging.propertytype" :label="2">单选框</el-radio>
+        <el-radio v-model="paging.propertytype" :label="3">复选框</el-radio>
+        <el-radio v-model="paging.propertytype" :label="4">输入框</el-radio>
+      </el-form-item>
+      <el-form-item label="属性是否sku属性" :label-width="formLabelWidth" prop="propertyisSKU">
+        <el-radio v-model="paging.propertyisSKU" :label="1">是</el-radio>
+        <el-radio v-model="paging.propertyisSKU" :label="2">否</el-radio>
+      </el-form-item>
+      <el-form-item>
+        <el-button @click="tjcxcz()">重置</el-button>
+        <el-button type="primary" @click="tjcx()">查询</el-button>
+      </el-form-item>
+    </el-form>
+    <!--  添加按钮-->
+    <div style="float: right">
+      <el-button type="success" @click="addbutton = true" plain>添加</el-button>
     </div>
+    <!--  分页-->
+    <div class="block" align="center">
+      <!--      style="float:right"-->
+      <el-pagination
+        @size-change="handleSizeChange"
+        @current-change="handleCurrentChange"
+        :current-page="currentPage4"
+        :page-sizes="xsts"
+        :page-size="100"
+        layout="total, sizes, prev, pager, next, jumper"
+        :total="total"
+      >
+      </el-pagination>
+    </div>
+    <!--  查询展示-->
+    <el-table :data="property" border style="width: 100%;" @selection-change="handleSelectionChange" >
+      <el-table-column type="selection" width="50"></el-table-column>
+      <el-table-column label="展示序号" width="80" >
+        <template slot-scope="scope">
+          {{ scope.$index+1}}
+        </template>
+      </el-table-column>
+      <!--    fixed    固定为第一列-->
+      <el-table-column prop="propertyname" label="属性名" > </el-table-column>
+      <el-table-column prop="propertynameCH" label="属性中文名" > </el-table-column>
+      <el-table-column prop="property_category_name" label="属性分类" ></el-table-column>
+      <el-table-column prop="propertytype" label="属性类型" >
+        <template slot-scope="scope">
+          {{ scope.row.propertytype==1?'下拉框':scope.row.propertytype==2?'单选框':scope.row.propertytype==3?'复选框':scope.row.propertytype==4?'输入框':'未知'}}
+        </template>
+      </el-table-column>
+      <el-table-column prop="propertyisSKU" label="是否为sku属性" >
+        <template slot-scope="scope">
+          {{ scope.row.propertyisSKU==1?'是':scope.row.propertyisSKU==2?'否':'待定'}}
+        </template>
+      </el-table-column>
+      <el-table-column prop="propertycreateDate" label="创建时间"></el-table-column>
+      <el-table-column prop="propertyupdateDate" label="修改时间"></el-table-column>
+      <el-table-column prop="propertyauthor" label="操作人"></el-table-column>
+      <el-table-column label="操作">
+        <template slot-scope="scope">
+          <el-row>
+            <el-button type="primary" icon="el-icon-edit" @click="hx(scope.row)" circle></el-button>
+            <!--              <el-button type="danger" icon="el-icon-delete" @click="del(scope.row)" circle></el-button>-->
+          </el-row>
+        </template>
+      </el-table-column>
+    </el-table>
+    <!--  添加-->
+    <el-dialog title="添加" :visible.sync="addbutton">
+      <!--      表单部分-->
+      <el-form :model="addPropertyForm"  ref="addPropertyForm" >
+        <el-form-item label="属性名称" :label-width="formLabelWidth" prop="propertyname">
+          <el-input v-model="addPropertyForm.propertyname" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="属性中文名" :label-width="formLabelWidth" prop="propertynameCH">
+          <el-input v-model="addPropertyForm.propertynameCH" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId">
+          <div align="left">
+            <el-select v-model="addPropertyForm.propertytypeId" placeholder="属性分类" style="width: 300px">
+              <el-option :label="category.property_category_name"  :value="category.id" v-for="(category,index) in propertycategory" :key="index"></el-option>
+            </el-select>
+          </div>
+        </el-form-item>
+        <el-form-item label="属性类型" :label-width="formLabelWidth" prop="propertytype">
+          <el-radio v-model="addPropertyForm.propertytype" :label="1">下拉框</el-radio>
+          <el-radio v-model="addPropertyForm.propertytype" :label="2">单选框</el-radio>
+          <el-radio v-model="addPropertyForm.propertytype" :label="3">复选框</el-radio>
+          <el-radio v-model="addPropertyForm.propertytype" :label="4">输入框</el-radio>
+        </el-form-item>
+        <el-form-item label="属性是否sku属性" :label-width="formLabelWidth" prop="propertyisSKU">
+          <el-radio v-model="addPropertyForm.propertyisSKU" :label="1">是</el-radio>
+          <el-radio v-model="addPropertyForm.propertyisSKU" :label="2">否</el-radio>
+        </el-form-item>
+      </el-form>
+      <!--      按钮部分-->
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="addoff('addPropertyForm')">取 消</el-button>
+        <el-button type="primary" @click="addProperty('addPropertyForm')">确 定</el-button>
+      </div>
+    </el-dialog>
+    <!--  修改-->
+    <el-dialog title="修改" :visible.sync="updatebutton">
+      <!--      表单部分-->
+      <el-form :model="updatePropertyForm"  ref="updatePropertyForm" >
+        <el-form-item label="属性名称" :label-width="formLabelWidth" prop="propertyname">
+          <el-input v-model="updatePropertyForm.propertyname" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="属性中文名" :label-width="formLabelWidth" prop="propertynameCH">
+          <el-input v-model="updatePropertyForm.propertynameCH" autocomplete="off"></el-input>
+        </el-form-item>
+        <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId">
+          <div align="left">
+            <el-select v-model="updatePropertyForm.propertytypeId" placeholder="属性分类" style="width: 300px">
+              <el-option :label="category.property_category_name"  :value="category.id" v-for="(category,index) in propertycategory" :key="index"></el-option>
+            </el-select>
+          </div>
+        </el-form-item>
+        <el-form-item label="属性类型" :label-width="formLabelWidth" prop="propertytype">
+          <el-radio v-model="updatePropertyForm.propertytype" :label="1">下拉框</el-radio>
+          <el-radio v-model="updatePropertyForm.propertytype" :label="2">单选框</el-radio>
+          <el-radio v-model="updatePropertyForm.propertytype" :label="3">复选框</el-radio>
+          <el-radio v-model="updatePropertyForm.propertytype" :label="4">输入框</el-radio>
+        </el-form-item>
+        <el-form-item label="属性是否sku属性" :label-width="formLabelWidth" prop="propertyisSKU">
+          <el-radio v-model="updatePropertyForm.propertyisSKU" :label="1">是</el-radio>
+          <el-radio v-model="updatePropertyForm.propertyisSKU" :label="2">否</el-radio>
+        </el-form-item>
+        <el-form-item label="属性是否删除" :label-width="formLabelWidth" prop="propertyisSKU">
+          <el-radio v-model="updatePropertyForm.propertyisDel" :label="1">是</el-radio>
+          <el-radio v-model="updatePropertyForm.propertyisDel" :label="2">否</el-radio>
+        </el-form-item>
+      </el-form>
+      <!--      按钮部分-->
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="updateoff('updateBrandForm')">取 消</el-button>
+        <el-button type="primary" @click="updateBrand()">确 定</el-button>
+      </div>
+    </el-dialog>
+
+  </div>
 </template>
 
 <script>
@@ -159,16 +184,6 @@
                 propertycategory:[],
                 // 查询结果
                 property:[],
-        //       propertyid
-        //       propertyname;//  属性名   color
-        //       propertynameCH;//  属性中文名   颜色
-        //       propertytypeId;//   分类的主键
-        //       propertytype;//     属性的类型    0 下拉框     1 单选框      2  复选框   3  输入框
-        //       propertyisSKU;//  是否为sku属性
-        //       propertyisDel;//   逻辑删
-        //       propertycreateDate;//
-        //       propertyupdateDate;//
-        //       propertyauthor;// 操作人
                 //分页条件查询
                 currentPage4: 0,
                 total:0,
@@ -176,7 +191,10 @@
                 paging:{
                     pagingStart:0,
                     pagingSize:3,
-
+                    propertytypeId:'',
+                    propertynameCH:'',
+                    propertyisSKU:'',
+                    propertytype:'',
                 },
                 //宽度
                 formLabelWidth: '120px',
@@ -188,29 +206,42 @@
             // 查询
             getData(){
                 var self=this;
-              this.$axios.get("api/api/property/getData?"+this.$qs.stringify(this.paging)).then(function (res) {
-                  if(res.data.code==110){
-                      self.property=res.data.data.propertylist;
-                      self.total=res.data.data.count;
-                  }else if(res.data.code==120){
-                      self.$message.error(res.data.message);
-                  }
-              }).catch(function () {
-                  self.$message({showClose: true,message: '查询失败！',type: 'error'});
-              })
+                this.$axios.get("api/api/property/getData?"+this.$qs.stringify(this.paging)).then(function (res) {
+                    if(res.data.code==110){
+                        self.property=res.data.data.propertylist;
+                        self.total=res.data.data.count;
+                    }else if(res.data.code==120){
+                        self.$message.error(res.data.message);
+                    }
+                }).catch(function () {
+                    self.$message({showClose: true,message: '查询失败！',type: 'error'});
+                })
+            },
+            // 条件查询重置
+            tjcxcz(){
+                var pagingsize= this.paging.pagingSize;
+                this.paging= {};
+                this.paging.pagingStart=0;
+                this.paging.pagingSize=pagingsize;
+                this.getData();
+            },
+            // 条件查询
+            tjcx(){
+                this.paging.pagingStart=0;
+                this.getData();
             },
             //查询分类
             getPropertyCategory(){
                 var self=this;
-              this.$axios.get("api/api/property/getPropertyCategory").then(function (res) {
-                  if(res.data.code==110){
-                      self.propertycategory=res.data.data;
-                  }else if(res.data.code==120){
-                      self.$message.error(res.data.message);
-                  }
-              }).catch(function () {
-                  self.$message({showClose: true,message: '查询失败！',type: 'error'});
-              })
+                this.$axios.get("api/api/property/getPropertyCategory").then(function (res) {
+                    if(res.data.code==110){
+                        self.propertycategory=res.data.data;
+                    }else if(res.data.code==120){
+                        self.$message.error(res.data.message);
+                    }
+                }).catch(function () {
+                    self.$message({showClose: true,message: '查询失败！',type: 'error'});
+                })
             },
             // 添加取消
             addoff(addPropertyForm){

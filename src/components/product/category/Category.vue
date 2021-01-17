@@ -239,10 +239,6 @@
               }
           })
       },
-
-
-
-
       handleOpen(key, keyPath) {
           console.log(key, keyPath);
       },
@@ -252,7 +248,13 @@
     },
     created(){
       this.queryProductCategory();
-    },
+    },watch:{
+          dialogFormVisible:function(){
+              if(this.dialogFormVisible==false){
+                  this.addCategorydata.name='';
+              }
+          }
+      },
   }
 </script>
 

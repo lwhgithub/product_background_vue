@@ -78,16 +78,19 @@
           <el-form-item label="图片" :label-width="formLabelWidth" prop="brandimgpath">
             <div align="left">
               <el-upload class="upload-demo" drag action="api/api/brand/uploadFile"
-                         :on-success="adduploadSuccess" :on-remove="addfiledelete" :file-list="filelist" ref="addupload" multiple>
+                         :on-success="adduploadSuccess" :on-remove="addfiledelete"
+                         :file-list="filelist" ref="addupload"
+                         :before-upload="beforeAvatarUpload"
+                         multiple>
                 <div v-if="addBrandForm.brandimgpath==''">
                    <i class="el-icon-upload"></i>
                   <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
-                  <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div>
                 </div>
                 <div v-else>
                   <img :src="addBrandForm.brandimgpath" width="360px" height="180px">
                 </div>
               </el-upload>
+              <div style="margin-left: 80px" class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过1024kb</div>
             </div>
           </el-form-item>
         </el-form>
@@ -101,37 +104,51 @@
       <el-dialog title="修改" :visible.sync="updatebutton">
         <!--      表单部分-->
          <el-form :model="updateBrandForm"  ref="updateBrandForm" >
-          <el-form-item label="品牌名称" :label-width="formLabelWidth" prop="bookName">
+          <el-form-item label="品牌名称" :label-width="formLabelWidth" prop="brandname">
             <el-input v-model="updateBrandForm.brandname" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="品牌首字母" :label-width="formLabelWidth" prop="bookName">
+          <el-form-item label="品牌首字母" :label-width="formLabelWidth" prop="brandE">
             <el-input v-model="updateBrandForm.brandE" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="品牌介绍" :label-width="formLabelWidth" prop="bookName">
+          <el-form-item label="品牌介绍" :label-width="formLabelWidth" prop="brandDesc">
             <el-input type="textarea" v-model="updateBrandForm.brandDesc" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="排序字段" :label-width="formLabelWidth" prop="bookName">
+          <el-form-item label="排序字段" :label-width="formLabelWidth" prop="brandord">
             <el-input v-model="updateBrandForm.brandord" autocomplete="off"></el-input>
           </el-form-item>
-          <el-form-item label="品牌删除" :label-width="formLabelWidth" prop="bookType">
+          <el-form-item label="品牌删除" :label-width="formLabelWidth" prop="brandisdel">
             <div align="left">
               <el-radio v-model="updateBrandForm.brandisdel" :label="1" >保留</el-radio>
               <el-radio v-model="updateBrandForm.brandisdel" :label="2" >删除</el-radio>
             </div>
           </el-form-item>
           <el-form-item label="原图片" :label-width="formLabelWidth">
-            <div align="left">
-              <img :src="updateBrandForm.brandimgpath" width="100px"/>
+            <div v-if="this.updateBrandForm.newbrandimgpath==''" align="left">
+              <img :src="updateBrandForm.brandimgpath" width="360px" height="180px"/>
+            </div>
+            <div v-else align="left">
+              <img :src="updateBrandForm.brandimgpath" width="360px" height="180px"/>
             </div>
           </el-form-item>
-           <el-form-item label="图片" :label-width="formLabelWidth" prop="updatecarimgPath">
+           <el-form-item label="新图片" :label-width="formLabelWidth" prop="brandimgpath">
              <div align="left">
                <el-upload class="upload-demo" drag action="api/api/brand/uploadFile"
-                          :on-success="updateuploadSuccess" :on-remove="updatefiledelete" :file-list="filelist" ref="updateupload" multiple>
-                 <i class="el-icon-upload"></i>
-                 <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
-                 <div class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过500kb</div>
+                          :on-success="updateuploadSuccess" :on-remove="updatefiledelete"
+                          :file-list="filelist" ref="updateupload"
+                          :before-upload="beforeAvatarUpload"
+                          multiple>
+
+                 <div v-if="updateBrandForm.newbrandimgpath ==''">
+                   <i class="el-icon-upload"></i>
+                   <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
+                 </div>
+                 <div v-else>
+                   <img :src="updateBrandForm.newbrandimgpath" width="360px" height="180px">
+                 </div>
+
+
                </el-upload>
+               <div style="margin-left: 80px" class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过1024kb</div>
              </div>
            </el-form-item>
         </el-form>
@@ -253,6 +270,7 @@
                 this.updateBrandForm.brandDesc=row.brandDesc;
                 this.updateBrandForm.brandord=row.brandord;
                 this.updateBrandForm.brandisdel=row.brandisdel;
+                this.updateBrandForm.newbrandimgpath='';
                 this.updatebutton=true;
             },
             // 修改取消
@@ -274,7 +292,18 @@
                     }
                 })
             },
+            beforeAvatarUpload(file) {
+                const isJPG = file.type === 'image/jpeg';
+                const isLt2M = file.size / 1024 / 1024 < 1;
 
+                if (!isJPG) {
+                    this.$message.error('上传头像图片只能是 JPG 格式!');
+                }
+                if (!isLt2M) {
+                    this.$message.error('上传头像图片大小不能超过 2MB!');
+                }
+                return isJPG && isLt2M;
+            },
             //添加文件上传成功的钩子
             adduploadSuccess(response, file, fileList) {
                 this.addBrandForm.brandimgpath = response.data;
@@ -282,10 +311,8 @@
             },
             //添加文件列表移除文件时的钩子
             addfiledelete(file, fileList){
-                console.log(file);
-                console.log(fileList);
-                this.addBrandForm.brandimgpath="";
-                this.$message.success("图片已清除");
+                this.addBrandForm.brandimgpath='';
+                // this.$message.success("图片已清除111");
             },
             //修改文件上传成功的钩子
             updateuploadSuccess(response, file, fileList) {
@@ -294,8 +321,8 @@
             },
             //修改文件列表移除文件时的钩子
             updatefiledelete(file, fileList){
-                this.updateBrandForm.newbrandimgpath="";
-                this.$message.success("图片已清除");
+                this.updateBrandForm.newbrandimgpath='';
+                // this.$message.success("图片已清除2222");
             },
             //切换每一页的条数时触发
             handleSizeChange(val) {
@@ -315,7 +342,15 @@
         },
         created(){
           this.getData();
-        }
+        },watch:{
+            addbutton:function(){
+                if(this.addbutton==false){
+                  this.addBrandForm={};
+                  this.addBrandForm.brandimgpath='';
+                  this.$refs.addupload.clearFiles();
+                }
+            }
+        },
     }
 </script>
 

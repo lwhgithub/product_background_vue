@@ -1,5 +1,5 @@
 <template>
-  <div style="float: left " >
+  <div  >
 <!--分类-->
     <el-menu   class="el-menu-vertical-demo" @open="handleOpen" @close="handleClose" :collapse="isCollapse"
                 style="border-right: none;width: 200px;" >
@@ -56,9 +56,11 @@
 
       accordion
       :props="defaultProps"
-      :default-expand-all="true">
+      :default-expand-all="true"
+
+    >
     </el-tree>
-<!--    -->
+<!--  添加-->
     <el-dialog title="添加" :visible.sync="dialogFormVisible" width="35%">
       <!--      表单部分-->
       <el-form :model="addCategorydata"  ref="addCategorydata" prop="addCategorydata" >
@@ -78,7 +80,7 @@
         <el-button type="primary" @click="addCategory()">确 定</el-button>
       </div>
     </el-dialog>
-
+<!--  修改-->
     <el-dialog title="修改" :visible.sync="dialogFormVisibleup" width="35%">
       <!--      表单部分-->
       <el-form :model="updateCategorydata"  ref="updateCategorydata" >
@@ -103,14 +105,6 @@
         <el-button type="primary" @click="updateCategory()">确 定</el-button>
       </div>
     </el-dialog>
-<!--分类树形结构懒加载-->
-<!--    <el-tree-->
-<!--      :props="props"-->
-<!--      :load="loadNode"-->
-<!--      lazy-->
-<!--      show-checkbox>-->
-<!--    </el-tree>-->
-
   </div>
 </template>
 
@@ -120,7 +114,6 @@
     data(){
       return {
           ztrradata: [],
-
           isCollapse: true,
           data:[],
           defaultProps: {
@@ -159,17 +152,6 @@
   }
   },
   methods:{
-        // loadNode(node, resolve) {
-        //     console.log(node);
-        //     console.log(resolve);
-        //     if (node.level === 0) {
-        //         return resolve([{ name: '111' },{ name: '222' }]);
-        //     }
-        //     if (node.level > 1) return resolve([]);
-        //     setTimeout(() => {const data = [{name:'11',leaf: true}, {name:"22",leaf: true}];
-        //     resolve(data);
-        //     }, 500);
-        // },
       aa(){
           console.log(222)
       },

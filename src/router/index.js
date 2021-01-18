@@ -22,7 +22,7 @@ export default new Router({
         },
         {
           path: '/category',
-          component: () => import(/* webpackChunkName: "dashboard" */ '../components/product/category/Category.vue'),
+          component: () => import(/* webpackChunkName: "dashboard" */ '../components/product/Category.vue'),
           meta: { title: '商品分类' }
         },
         {

@@ -5,10 +5,12 @@
       <el-form-item label="属性中文名">
         <el-input placeholder="属性中文名" v-model="paging.propertynameCH" style="width: 100%;"></el-input>
       </el-form-item>
-      <el-form-item label="属性分类">
-        <el-select v-model="paging.propertytypeId" placeholder="属性分类" style="width: 230px">
-          <el-option :label="category.property_category_name"  :value="category.id" v-for="(category,index) in propertycategory" :key="index"></el-option>
-        </el-select>
+      <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId">
+        <div align="left">
+          <el-select v-model="paging.propertytypeId" placeholder="属性分类" style="width: 300px">
+            <el-option :label="category.name"  :value="category.id" v-for="(category,index) in categoryTypes" :key="index"></el-option>
+          </el-select>
+        </div>
       </el-form-item>
       <el-form-item label="属性类型" :label-width="formLabelWidth" prop="propertytype">
         <el-radio v-model="paging.propertytype" :label="1">下拉框</el-radio>
@@ -54,7 +56,7 @@
       <!--    fixed    固定为第一列-->
       <el-table-column prop="propertyname" label="属性名" > </el-table-column>
       <el-table-column prop="propertynameCH" label="属性中文名" > </el-table-column>
-      <el-table-column prop="property_category_name" label="属性分类" ></el-table-column>
+      <el-table-column prop="name" label="属性分类" ></el-table-column>
       <el-table-column prop="propertytype" label="属性类型" >
         <template slot-scope="scope">
           {{ scope.row.propertytype==1?'下拉框':scope.row.propertytype==2?'单选框':scope.row.propertytype==3?'复选框':scope.row.propertytype==4?'输入框':'未知'}}
@@ -90,7 +92,7 @@
         <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId">
           <div align="left">
             <el-select v-model="addPropertyForm.propertytypeId" placeholder="属性分类" style="width: 300px">
-              <el-option :label="category.property_category_name"  :value="category.id" v-for="(category,index) in propertycategory" :key="index"></el-option>
+              <el-option :label="category.name"  :value="category.id" v-for="(category,index) in categoryTypes" :key="index"></el-option>
             </el-select>
           </div>
         </el-form-item>
@@ -124,7 +126,7 @@
         <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId">
           <div align="left">
             <el-select v-model="updatePropertyForm.propertytypeId" placeholder="属性分类" style="width: 300px">
-              <el-option :label="category.property_category_name"  :value="category.id" v-for="(category,index) in propertycategory" :key="index"></el-option>
+              <el-option :label="category.name"  :value="category.id" v-for="(category,index) in categoryTypes" :key="index"></el-option>
             </el-select>
           </div>
         </el-form-item>
@@ -238,8 +240,6 @@
                     propertyisSKU:'',
                     propertyisDel:'',
                 },
-                //商品分类查询结果
-                propertycategory:[],
                 // 商品属性查询结果
                 property:[],
                 //分页条件查询
@@ -254,7 +254,6 @@
                     propertyisSKU:'',
                     propertytype:'',
                 },
-
 //属性值
                 //查询属性值按钮
                 propertyPricebutton:false,
@@ -287,9 +286,51 @@
                 formLabelWidth: '120px',
                 // 头部复选框
                 multipleSelection:[],
+
+                //分类name拼接
+                categoryData:[],
+                categoryTypeName:'',
+                categoryTypes:[],
             }
         },
         methods:{
+            //分类name拼接
+            formaterTypeData:function(){
+                this.$axios.get("api/api/type/getDataList").then(res=>{
+                    this.categoryData=res.data.data;
+                    this.getChildrenType();
+                    for (let i = 0; i <this.categoryTypes.length ; i++) {
+                        this.categoryTypeName="";
+                        this.chandleName(this.categoryTypes[i]);
+                        this.categoryTypes[i].name=this.categoryTypeName.split("/").reverse().join("/").substr(0,this.categoryTypeName.length-1);
+                    }
+                })
+            },
+            chandleName:function(node){
+                if(node.pid!=0){
+                    this.categoryTypeName+="/"+node.name;
+                    for (let i = 0; i <this.categoryData.length ; i++) {
+                        if(node.pid==this.categoryData[i].id){
+                            this.chandleName(this.categoryData[i]);
+                            break;
+                        }}
+                }else{
+                    this.categoryTypeName+="/"+node.name;
+                }},
+            getChildrenType:function(){
+                for (let i = 0; i <this.categoryData.length ; i++) {
+                    let  node=this.categoryData[i];
+                    this.isChildrenNode(node);
+                }},
+            isChildrenNode:function(node){
+                let rs=true;
+                for (let i = 0; i <this.categoryData.length ; i++) {
+                    if(node.id==this.categoryData[i].pid){
+                        rs=false;
+                        break;}}
+                if(rs==true){this.categoryTypes.push(node);
+                }},
+
             // 查询
             getData(){
                 var self=this;
@@ -297,6 +338,7 @@
                     if(res.data.code==110){
                         self.property=res.data.data.propertylist;
                         self.total=res.data.data.count;
+                        // self.aaaa();
                     }else if(res.data.code==120){
                         self.$message.error(res.data.message);
                     }
@@ -304,6 +346,17 @@
                     self.$message({showClose: true,message: '查询失败！',type: 'error'});
                 })
             },
+            // aaaa(){
+            //     // debugger;
+            //       for (let i = 0; i < this.property.length;i++) {
+            //           console.log(this.property[i].propertytypeId);
+            //           console.log(1111);
+            //           console.log(this.categoryTypes[i]);
+            //           if(this.property[i].propertytypeId==this.categoryTypes[i].id){
+            //               this.property[i].propertytypeId=this.categoryTypes[i].name;
+            //           }
+            //       }
+            // },
             // 条件查询重置
             tjcxcz(){
                 var pagingsize= this.paging.pagingSize;
@@ -317,19 +370,6 @@
                 this.paging.pagingStart=0;
                 this.getData();
             },
-            //查询分类
-            getPropertyCategory(){
-                var self=this;
-                this.$axios.get("api/api/property/getPropertyCategory").then(function (res) {
-                    if(res.data.code==110){
-                        self.propertycategory=res.data.data;
-                    }else if(res.data.code==120){
-                        self.$message.error(res.data.message);
-                    }
-                }).catch(function () {
-                    self.$message({showClose: true,message: '查询失败！',type: 'error'});
-                })
-            },
             // 添加取消
             addoff(addPropertyForm){
                 this.$refs[addPropertyForm].resetFields();
@@ -338,6 +378,7 @@
             // 添加
             addProperty (addPropertyForm) {
                 var self = this;
+                console.log(this.addPropertyForm.propertytypeId)
                 this.$axios.post("api/api/property/add", this.$qs.stringify(this.addPropertyForm)).then(function (res) {
                     if (res.data.code == 110) {
                         self.$message({showClose: true,message: '添加成功！',type: 'success'});
@@ -473,7 +514,8 @@
         },
         created(){
             this.getData();
-            this.getPropertyCategory();
+            this.formaterTypeData();
+            // this.aaaa();
         },
         watch:{
             addbutton:function(){

@@ -155,19 +155,19 @@
         <el-button type="success" @click="addpricebutton = true" plain>添加属性值</el-button>
         <el-button type="success" @click="propertyPricebutton=false" plain>关闭</el-button>
       </div>
-      <el-table :data="updatePriceForm" border style="width: 100%;">
+      <el-table :data="PropertypriceForm" border style="width: 100%;">
         <el-table-column prop="propertynameCH" label="属性名" > </el-table-column>
         <el-table-column prop="propertyPriceNameCH" label="属性值名" > </el-table-column>
         <el-table-column label="操作">
           <template slot-scope="scope">
             <el-row>
-              <el-button type="success" @click="updatePrice(scope.row)" plain>修改</el-button>
+              <el-button type="success" @click="toupdatePrice(scope.row)" plain>修改</el-button>
             </el-row>
           </template>
         </el-table-column>
       </el-table>
     </el-dialog>
-    <!--  添加-->
+    <!--  属性值添加-->
     <el-dialog title="属性值添加" :visible.sync="addpricebutton">
       <!--      表单部分-->
       <el-form :model="addPriceForm"  ref="addPriceForm" >
@@ -184,7 +184,27 @@
         <el-button type="primary" @click="addPrice('addPriceForm')">确 定</el-button>
       </div>
     </el-dialog>
-
+    <!--  属性值修改-->
+    <el-dialog title="属性值修改" :visible.sync="updatepricebutton">
+        <!--      表单部分-->
+        <el-form :model="updatePriceForm"  ref="updatePriceForm" >
+          <el-form-item label="属性值名称" :label-width="formLabelWidth" prop="propertyPriceName">
+            <el-input v-model="updatePriceForm.propertyPriceName" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="属性值中文名" :label-width="formLabelWidth" prop="propertyPriceNameCH">
+            <el-input v-model="updatePriceForm.propertyPriceNameCH" autocomplete="off"></el-input>
+          </el-form-item>
+          <el-form-item label="属性值是否删除" :label-width="formLabelWidth" prop="propertyPriceisDel">
+            <el-radio v-model="updatePriceForm.propertyPriceisDel" :label="1">是</el-radio>
+            <el-radio v-model="updatePriceForm.propertyPriceisDel" :label="2">否</el-radio>
+          </el-form-item>
+        </el-form>
+        <!--      按钮部分-->
+        <div slot="footer" class="dialog-footer">
+          <el-button @click="updatepricebutton = false">取 消</el-button>
+          <el-button type="primary" @click="updatePrice()">确 定</el-button>
+        </div>
+    </el-dialog>
   </div>
 </template>
 
@@ -215,11 +235,10 @@
                     propertyisSKU:'',
                     propertyisDel:'',
                 },
-
                 //查询属性值按钮
                 propertyPricebutton:false,
                 //查询属性值数据
-                updatePriceForm:[],
+                PropertypriceForm:[],
                 //属性值添加按钮
                 addpricebutton:false,
                 //属性值添加数据
@@ -228,14 +247,15 @@
                     propertyPriceNameCH:'',
                     propertyId:'',
                 },
-                //属性值添加按钮
-                addpricebutton:false,
-                //属性值添加数据
-                addPriceForm:{
-
+                //属性值修改按钮
+                updatepricebutton:false,
+                //属性值修改数据
+                updatePriceForm:{
+                    propertyPriceId:'',
                     propertyPriceName:'',
                     propertyPriceNameCH:'',
                     propertyId:'',
+                    propertyPriceisDel:'',
                 },
 
                 //商品分类查询结果
@@ -325,13 +345,6 @@
             // 修改回显
             hx(row){
                 this.updatePropertyForm = JSON.parse(JSON.stringify(row));
-                this.updatePropertyForm.propertyid=row.propertyid;
-                this.updatePropertyForm.propertyname=row.propertyname;
-                this.updatePropertyForm.propertynameCH=row.propertynameCH;
-                this.updatePropertyForm.propertytypeId=row.propertytypeId;
-                this.updatePropertyForm.propertytype=row.propertytype;
-                this.updatePropertyForm.propertyisSKU=row.propertyisSKU;
-                this.updatePropertyForm.propertyisDel=row.propertyisDel;
                 this.updatebutton=true;
             },
             // 修改取消
@@ -358,7 +371,7 @@
                 var propertyid=row.propertyid;
                 this.$axios.get("api/api/property/getPropertyPrice?"+this.$qs.stringify({"propertyid":propertyid})).then(function (res) {
                     if(res.data.code==110){
-                        self.updatePriceForm=res.data.data;
+                        self.PropertypriceForm=res.data.data;
                         self.addPriceForm.propertyId=row.propertyid;
                     }else if(res.data.code==120){
                         self.$message.error(res.data.message);
@@ -390,9 +403,27 @@
                 })
             },
             //属性值回显
-            updatePrice(row){
-                this.
+            toupdatePrice(row){
+                this.updatePriceForm = JSON.parse(JSON.stringify(row));
+                this.updatepricebutton=true;
             },
+            updatePrice(){
+                var self = this;
+                this.$axios.put("api/api/property/updatePrice", this.$qs.stringify(this.updatePriceForm)).then(function (res) {
+                    if (res.data.code == 110) {
+                        self.$message({showClose: true,message: '修改成功！',type: 'success'});
+                        self.updatePriceForm={};
+                        self.updatepricebutton=false;
+                    }else if(res.data.code == 120){
+                        self.$message.error(res.data.message);
+                    }
+                }).catch(function () {
+                    self.$message({showClose: true,message: '修改失败！',type: 'error'});
+                })
+            },
+
+
+
             //切换每一页的条数时触发
             handleSizeChange(val) {
                 this.paging.pagingSize=(val);

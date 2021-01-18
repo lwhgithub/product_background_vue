@@ -72,7 +72,7 @@
         <template slot-scope="scope">
           <el-row>
             <el-button type="primary" icon="el-icon-edit" @click="hx(scope.row)" circle></el-button>
-            <el-button type="success" @click="getPropertyPrice(scope.row)" plain>属性值</el-button>
+            <el-button v-if="scope.row.propertytype!=4" type="success" @click="togetPropertyPrice(scope.row)" plain>属性值</el-button>
           </el-row>
         </template>
       </el-table-column>
@@ -150,42 +150,43 @@
       </div>
     </el-dialog>
     <!--  属性值展示-->
-    <el-dialog title="属性值展示" :visible.sync="propertyPricebutton">
-      <div style="float: right">
-        <el-button type="success" @click="addpricebutton = true" plain>添加属性值</el-button>
-        <el-button type="success" @click="propertyPricebutton=false" plain>关闭</el-button>
+    <el-dialog :title="propertyPriceShowTitle" :visible.sync="propertyPricebutton">
+      <div v-if="propertyPriceShow">
+        <div style="float: right" >
+          <el-button type="success" @click="toPropertyPriceAdd()" plain>添加属性值</el-button>
+          <el-button type="success" @click="propertyPricebutton = false" plain>关闭</el-button>
+        </div>
+          <el-table :data="PropertypriceForm" border style="width: 100%;" >
+            <el-table-column prop="propertynameCH" label="属性名" > </el-table-column>
+            <el-table-column prop="propertyPriceNameCH" label="属性值名" > </el-table-column>
+            <el-table-column label="操作">
+              <template slot-scope="scope">
+                <el-row>
+                  <el-button type="success" @click="toupdatePrice(scope.row)" plain>修改</el-button>
+                </el-row>
+              </template>
+            </el-table-column>
+          </el-table>
       </div>
-      <el-table :data="PropertypriceForm" border style="width: 100%;">
-        <el-table-column prop="propertynameCH" label="属性名" > </el-table-column>
-        <el-table-column prop="propertyPriceNameCH" label="属性值名" > </el-table-column>
-        <el-table-column label="操作">
-          <template slot-scope="scope">
-            <el-row>
-              <el-button type="success" @click="toupdatePrice(scope.row)" plain>修改</el-button>
-            </el-row>
-          </template>
-        </el-table-column>
-      </el-table>
-    </el-dialog>
-    <!--  属性值添加-->
-    <el-dialog title="属性值添加" :visible.sync="addpricebutton">
-      <!--      表单部分-->
-      <el-form :model="addPriceForm"  ref="addPriceForm" >
-        <el-form-item label="属性值名称" :label-width="formLabelWidth" prop="propertyPriceName">
-          <el-input v-model="addPriceForm.propertyPriceName" autocomplete="off"></el-input>
-        </el-form-item>
-        <el-form-item label="属性值中文名" :label-width="formLabelWidth" prop="propertyPriceNameCH">
-          <el-input v-model="addPriceForm.propertyPriceNameCH" autocomplete="off"></el-input>
-        </el-form-item>
-      </el-form>
-      <!--      按钮部分-->
-      <div slot="footer" class="dialog-footer">
-        <el-button @click="addPriceoff('addPriceForm')">取 消</el-button>
-        <el-button type="primary" @click="addPrice('addPriceForm')">确 定</el-button>
+<!--      属性值添加-->
+      <div v-if="propertyPriceAdd" style="height: 220px;">
+          <!--      表单部分-->
+          <el-form :model="addPriceForm"  ref="addPriceForm" >
+            <el-form-item label="属性值名称" :label-width="formLabelWidth" prop="propertyPriceName">
+              <el-input v-model="addPriceForm.propertyPriceName" placeholder="属性值名称" autocomplete="off" ></el-input>
+            </el-form-item>
+            <el-form-item label="属性值中文名" :label-width="formLabelWidth" prop="propertyPriceNameCH">
+              <el-input v-model="addPriceForm.propertyPriceNameCH" placeholder="属性值中文名" autocomplete="off"></el-input>
+            </el-form-item>
+          </el-form>
+          <!--      按钮部分-->
+          <div style="float: right" slot="footer" class="dialog-footer">
+            <el-button @click="addPriceoff('addPriceForm')">取 消</el-button>
+            <el-button type="primary" @click="addPrice('addPriceForm')">确 定</el-button>
+          </div>
       </div>
-    </el-dialog>
-    <!--  属性值修改-->
-    <el-dialog title="属性值修改" :visible.sync="updatepricebutton">
+<!--   属性值修改-->
+      <div v-if="propertyPriceUpdate">
         <!--      表单部分-->
         <el-form :model="updatePriceForm"  ref="updatePriceForm" >
           <el-form-item label="属性值名称" :label-width="formLabelWidth" prop="propertyPriceName">
@@ -201,9 +202,10 @@
         </el-form>
         <!--      按钮部分-->
         <div slot="footer" class="dialog-footer">
-          <el-button @click="updatepricebutton = false">取 消</el-button>
+          <el-button @click="updatePriceoff()">取 消</el-button>
           <el-button type="primary" @click="updatePrice()">确 定</el-button>
         </div>
+      </div>
     </el-dialog>
   </div>
 </template>
@@ -213,6 +215,7 @@
         name: "",
         data(){
             return {
+//属性
                 // 添加按钮
                 addbutton:false,
                 // 添加数据
@@ -235,29 +238,6 @@
                     propertyisSKU:'',
                     propertyisDel:'',
                 },
-                //查询属性值按钮
-                propertyPricebutton:false,
-                //查询属性值数据
-                PropertypriceForm:[],
-                //属性值添加按钮
-                addpricebutton:false,
-                //属性值添加数据
-                addPriceForm:{
-                    propertyPriceName:'',
-                    propertyPriceNameCH:'',
-                    propertyId:'',
-                },
-                //属性值修改按钮
-                updatepricebutton:false,
-                //属性值修改数据
-                updatePriceForm:{
-                    propertyPriceId:'',
-                    propertyPriceName:'',
-                    propertyPriceNameCH:'',
-                    propertyId:'',
-                    propertyPriceisDel:'',
-                },
-
                 //商品分类查询结果
                 propertycategory:[],
                 // 商品属性查询结果
@@ -274,6 +254,35 @@
                     propertyisSKU:'',
                     propertytype:'',
                 },
+
+//属性值
+                //查询属性值按钮
+                propertyPricebutton:false,
+                //查询属性值数据
+                PropertypriceForm:[],
+                //属性值展示弹框标题
+                propertyPriceShowTitle:'',
+                //属性值查询展示按钮
+                propertyPriceShow:true,
+                //属性值添加按钮
+                propertyPriceAdd:false,
+                //属性值添加数据
+                addPriceForm:{
+                    propertyPriceName:'',
+                    propertyPriceNameCH:'',
+                    propertyId:'',
+                },
+                //属性值修改按钮
+                propertyPriceUpdate:false,
+                //属性值修改数据
+                updatePriceForm:{
+                    propertyPriceId:'',
+                    propertyPriceName:'',
+                    propertyPriceNameCH:'',
+                    propertyId:'',
+                    propertyPriceisDel:'',
+                },
+//通用
                 //宽度
                 formLabelWidth: '120px',
                 // 头部复选框
@@ -365,65 +374,87 @@
                     }
                 })
             },
+            //调用查询属性值的方法
+            togetPropertyPrice(row){
+                this.propertyPriceShowTitle=row.propertynameCH+'的属性值';
+                this.addPriceForm.propertyId=row.propertyid;
+                this.getPropertyPrice(row.propertyid);
+            },
             //查询属性值
-            getPropertyPrice(row){
+            getPropertyPrice(propertyid){
                 var self = this;
-                var propertyid=row.propertyid;
                 this.$axios.get("api/api/property/getPropertyPrice?"+this.$qs.stringify({"propertyid":propertyid})).then(function (res) {
                     if(res.data.code==110){
                         self.PropertypriceForm=res.data.data;
-                        self.addPriceForm.propertyId=row.propertyid;
                     }else if(res.data.code==120){
                         self.$message.error(res.data.message);
                     }
                 }).catch(function (res) {
-                    self.$message({showClose: true,message: '查询失败！',type: 'error'});
+                    self.$message({showClose: true,message: '系统错误！',type: 'error'});
                 })
                 this.propertyPricebutton=true;
             },
             // 属性值添加取消
             addPriceoff(addPriceForm){
                 this.$refs[addPriceForm].resetFields();
-                this.addpricebutton=false;
+                this.propertyPriceAdd=false;
+                this.propertyPriceShow=true;
+                this.propertyPriceUpdate=false;
+            },
+            //属性值添加前
+            toPropertyPriceAdd(){
+                this.propertyPriceShow=false;
+                this.propertyPriceAdd=true;
+                this.propertyPriceUpdate=false;
             },
             // 属性值添加
             addPrice (addPriceForm) {
                 var self = this;
-                console.log(this.addPriceForm);
                 this.$axios.post("api/api/property/addPrice", this.$qs.stringify(this.addPriceForm)).then(function (res) {
                     if (res.data.code == 110) {
                         self.$message({showClose: true,message: '添加成功！',type: 'success'});
                         self.$refs[addPriceForm].resetFields();
-                        self.addpricebutton=false;
+                        self.propertyPriceAdd=false;
+                        self.propertyPriceUpdate=false;
+                        self.propertyPriceShow=true;
+                        self.getPropertyPrice(self.addPriceForm.propertyId);
                     }else if(res.data.code == 120){
                         self.$message.error(res.data.message);
                     }
                 }).catch(function () {
-                    self.$message({showClose: true,message: '添加失败！',type: 'error'});
+                    self.$message({showClose: true,message: '系统错误！',type: 'error'});
                 })
             },
             //属性值回显
             toupdatePrice(row){
                 this.updatePriceForm = JSON.parse(JSON.stringify(row));
-                this.updatepricebutton=true;
+                this.propertyPriceUpdate=true;
+                this.propertyPriceAdd=false;
+                this.propertyPriceShow=false;
             },
+            //属性值修改取消
+            updatePriceoff(){
+                this.propertyPriceUpdate=false;
+                this.propertyPriceAdd=false;
+                this.propertyPriceShow=true;
+            },
+            //属性值属性值
             updatePrice(){
                 var self = this;
                 this.$axios.put("api/api/property/updatePrice", this.$qs.stringify(this.updatePriceForm)).then(function (res) {
                     if (res.data.code == 110) {
                         self.$message({showClose: true,message: '修改成功！',type: 'success'});
-                        self.updatePriceForm={};
-                        self.updatepricebutton=false;
+                        self.propertyPriceUpdate=false;
+                        self.propertyPriceAdd=false;
+                        self.propertyPriceShow=true;
+                        self.getPropertyPrice(self.updatePriceForm.propertyId);
                     }else if(res.data.code == 120){
                         self.$message.error(res.data.message);
                     }
                 }).catch(function () {
-                    self.$message({showClose: true,message: '修改失败！',type: 'error'});
+                    self.$message({showClose: true,message: '系统错误！',type: 'error'});
                 })
             },
-
-
-
             //切换每一页的条数时触发
             handleSizeChange(val) {
                 this.paging.pagingSize=(val);
@@ -449,6 +480,13 @@
                 if(this.addbutton==false){
                     this.addPropertyForm={};
                 }
+            },
+            propertyPricebutton:function () {
+              if(this.propertyPricebutton==false){
+                  this.addPriceForm={};
+                  this.propertyPriceAdd=false;
+                  this.propertyPriceUpdate=false;
+              }
             }
         },
     }

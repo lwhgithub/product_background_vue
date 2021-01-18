@@ -33,7 +33,6 @@
     </div>
     <!--  分页-->
     <div class="block" align="center">
-      <!--      style="float:right"-->
       <el-pagination
         @size-change="handleSizeChange"
         @current-change="handleCurrentChange"
@@ -338,7 +337,6 @@
                     if(res.data.code==110){
                         self.property=res.data.data.propertylist;
                         self.total=res.data.data.count;
-                        // self.aaaa();
                     }else if(res.data.code==120){
                         self.$message.error(res.data.message);
                     }
@@ -346,17 +344,6 @@
                     self.$message({showClose: true,message: '查询失败！',type: 'error'});
                 })
             },
-            // aaaa(){
-            //     // debugger;
-            //       for (let i = 0; i < this.property.length;i++) {
-            //           console.log(this.property[i].propertytypeId);
-            //           console.log(1111);
-            //           console.log(this.categoryTypes[i]);
-            //           if(this.property[i].propertytypeId==this.categoryTypes[i].id){
-            //               this.property[i].propertytypeId=this.categoryTypes[i].name;
-            //           }
-            //       }
-            // },
             // 条件查询重置
             tjcxcz(){
                 var pagingsize= this.paging.pagingSize;

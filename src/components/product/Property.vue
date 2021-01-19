@@ -187,7 +187,7 @@
           </div>
       </div>
 <!--   属性值修改-->
-      <div v-if="propertyPriceUpdate">
+      <div v-if="propertyPriceUpdate"  style="height: 220px;">
         <!--      表单部分-->
         <el-form :model="updatePriceForm"  ref="updatePriceForm" >
           <el-form-item label="属性值名称" :label-width="formLabelWidth" prop="propertyPriceName">
@@ -202,7 +202,7 @@
           </el-form-item>
         </el-form>
         <!--      按钮部分-->
-        <div slot="footer" class="dialog-footer">
+        <div style="float: right" slot="footer" class="dialog-footer">
           <el-button @click="updatePriceoff()">取 消</el-button>
           <el-button type="primary" @click="updatePrice()">确 定</el-button>
         </div>
@@ -293,43 +293,6 @@
             }
         },
         methods:{
-            //分类name拼接
-            formaterTypeData:function(){
-                this.$axios.get("api/api/type/getDataList").then(res=>{
-                    this.categoryData=res.data.data;
-                    this.getChildrenType();
-                    for (let i = 0; i <this.categoryTypes.length ; i++) {
-                        this.categoryTypeName="";
-                        this.chandleName(this.categoryTypes[i]);
-                        this.categoryTypes[i].name=this.categoryTypeName.split("/").reverse().join("/").substr(0,this.categoryTypeName.length-1);
-                    }
-                })
-            },
-            chandleName:function(node){
-                if(node.pid!=0){
-                    this.categoryTypeName+="/"+node.name;
-                    for (let i = 0; i <this.categoryData.length ; i++) {
-                        if(node.pid==this.categoryData[i].id){
-                            this.chandleName(this.categoryData[i]);
-                            break;
-                        }}
-                }else{
-                    this.categoryTypeName+="/"+node.name;
-                }},
-            getChildrenType:function(){
-                for (let i = 0; i <this.categoryData.length ; i++) {
-                    let  node=this.categoryData[i];
-                    this.isChildrenNode(node);
-                }},
-            isChildrenNode:function(node){
-                let rs=true;
-                for (let i = 0; i <this.categoryData.length ; i++) {
-                    if(node.id==this.categoryData[i].pid){
-                        rs=false;
-                        break;}}
-                if(rs==true){this.categoryTypes.push(node);
-                }},
-
             // 查询
             getData(){
                 var self=this;
@@ -411,7 +374,7 @@
             //查询属性值
             getPropertyPrice(propertyid){
                 var self = this;
-                this.$axios.get("api/api/property/getPropertyPrice?"+this.$qs.stringify({"propertyid":propertyid})).then(function (res) {
+                this.$axios.get("api/api/property/getPropertyPrice?"+this.$qs.stringify({"propertyId":propertyid})).then(function (res) {
                     if(res.data.code==110){
                         self.PropertypriceForm=res.data.data;
                     }else if(res.data.code==120){
@@ -483,6 +446,42 @@
                     self.$message({showClose: true,message: '系统错误！',type: 'error'});
                 })
             },
+            //分类name拼接
+            formaterTypeData:function(){
+                this.$axios.get("api/api/type/getDataList").then(res=>{
+                    this.categoryData=res.data.data;
+                    this.getChildrenType();
+                    for (let i = 0; i <this.categoryTypes.length ; i++) {
+                        this.categoryTypeName="";
+                        this.chandleName(this.categoryTypes[i]);
+                        this.categoryTypes[i].name=this.categoryTypeName.split("/").reverse().join("/").substr(0,this.categoryTypeName.length-1);
+                    }
+                })
+            },
+            chandleName:function(node){
+                if(node.pid!=0){
+                    this.categoryTypeName+="/"+node.name;
+                    for (let i = 0; i <this.categoryData.length ; i++) {
+                        if(node.pid==this.categoryData[i].id){
+                            this.chandleName(this.categoryData[i]);
+                            break;
+                        }}
+                }else{
+                    this.categoryTypeName+="/"+node.name;
+                }},
+            getChildrenType:function(){
+                for (let i = 0; i <this.categoryData.length ; i++) {
+                    let  node=this.categoryData[i];
+                    this.isChildrenNode(node);
+                }},
+            isChildrenNode:function(node){
+                let rs=true;
+                for (let i = 0; i <this.categoryData.length ; i++) {
+                    if(node.id==this.categoryData[i].pid){
+                        rs=false;
+                        break;}}
+                if(rs==true){this.categoryTypes.push(node);
+                }},
             //切换每一页的条数时触发
             handleSizeChange(val) {
                 this.paging.pagingSize=(val);

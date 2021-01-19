@@ -1,20 +1,21 @@
 <template>
   <div>
-
-
+<!--    步骤条-->
        <div style="margin-left:230px;width: 800px">
            <el-steps :active="active" finish-status="success" align-center>
-             <el-step title="步骤 1"></el-step>
-             <el-step title="步骤 2"></el-step>
+             <el-step title="商品基本信息"></el-step>
+             <el-step title="商品属性信息"></el-step>
+             <el-step title="商品图片"></el-step>
           </el-steps>
        </div>
-        <div style="margin-left:200px;margin-top: 50px; width: 700px" v-show="productaddform">
+<!--    第一页商品基本信息-->
+        <div style="margin-left:200px;margin-top: 50px; width: 700px" v-show="active==0">
               <el-form :model="addProductForm"  ref="addProductForm" >
                 <el-form-item label="名称" :label-width="formLabelWidth" prop="productName">
-                  <el-input v-model="addProductForm.productName" autocomplete="off"></el-input>
+                  <el-input v-model="addProductForm.productName" placeholder="商品名称" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item label=" 标题" :label-width="formLabelWidth" prop="productTitle">
-                  <el-input v-model="addProductForm.productTitle" autocomplete="off"></el-input>
+                  <el-input v-model="addProductForm.productTitle" placeholder="展示标题" autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="商品品牌" :label-width="formLabelWidth" prop="productBrandId">
                   <div align="left">
@@ -24,43 +25,116 @@
                   </div>
                 </el-form-item>
                 <el-form-item label="商品介绍" :label-width="formLabelWidth" prop="productDesc">
-                  <el-input type="textarea" v-model="addProductForm.productDesc" autocomplete="off"></el-input>
+                  <el-input type="textarea" v-model="addProductForm.productDesc"  autocomplete="off"></el-input>
                 </el-form-item>
                 <el-form-item label="价格" :label-width="formLabelWidth" prop="productPrice">
-                  <el-input v-model="addProductForm.productPrice" autocomplete="off"></el-input>
+                  <el-input-number v-model="addProductForm.productPrice" :precision="2" :step="1"></el-input-number>
                 </el-form-item>
                 <el-form-item label="库存" :label-width="formLabelWidth" prop="productStock">
-                  <el-input v-model="addProductForm.productStock" autocomplete="off"></el-input>
+                  <el-input-number v-model="addProductForm.productStock" :step="10"></el-input-number>
                 </el-form-item>
                 <el-form-item label="排序" :label-width="formLabelWidth" prop="productSortNum">
-                  <el-input v-model="addProductForm.productSortNum" autocomplete="off"></el-input>
+                  <el-input-number v-model="addProductForm.productSortNum" :step="1"></el-input-number>
                 </el-form-item>
               </el-form>
         </div>
-    <div style="margin-left:200px;margin-top: 50px; width: 700px" v-show="!productaddform">
+<!--    第二页商品属性-->
+    <div style="margin-left:200px;margin-top: 50px; width: 700px" v-show="active==1">
       <el-form :model="addProductForm"  ref="addProductForm" >
-        <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId">
+        <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId" >
           <div align="left">
-            <el-select v-model="productPropertyCategory" placeholder="属性分类" style="width: 300px">
-              <el-option :label="category.name"  :value="category.id" v-for="(category,index) in categoryTypes" :key="index"></el-option>
+            <el-select v-model="productPropertyCategory" placeholder="属性分类" @change="getPropertyData(productPropertyCategory)" style="width:300px">
+              <el-option :label="category.name" :value="category.id" v-for="(category,index) in categoryTypes" :key="index"></el-option>
             </el-select>
           </div>
+        </el-form-item>
+        <el-form-item v-if="isNotSKU.length>0" label="商品规格" :label-width="formLabelWidth">
+          <el-form-item v-for="isNotsk in  isNotSKU" :key="isNotsk.propertyid" :label="isNotsk.propertynameCH" label-width="100px">
+<!--           输入框-->
+            <el-input v-if="isNotsk.propertytype==4"  v-model="productpropertyinpiut" prop="productpropertyinpiut"></el-input>
+<!--           下拉框-->
+            <el-select v-if="isNotsk.propertytype==1" placeholder="请选择"  v-model="productpropertyselect" prop="productpropertyselect">
+              <el-option v-for="(valu,index) in isNotsk.values" :key="index" :label="valu.propertyPriceNameCH" :value="valu.propertyPriceId" ></el-option>
+            </el-select>
+<!--           单选框-->
+            <el-radio-group v-if="isNotsk.propertytype==2" v-model="productpropertyradio" prop="productpropertyradio">
+              <el-radio v-for="valu in isNotsk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceId">{{valu.propertyPriceNameCH}}</el-radio>
+            </el-radio-group>
+<!--           复选框-->
+            <el-checkbox-group v-if="isNotsk.propertytype==3" v-model="productpropertycheckbox" prop="productpropertycheckbox">
+              <el-checkbox v-for="valu in isNotsk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceNameCH"></el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
+        </el-form-item>
+        <el-form-item v-if="isSKU.length>0" label="商品参数" :label-width="formLabelWidth">
+          <el-form-item v-for="issk in  isSKU" :key="issk.propertyid" :label="issk.propertynameCH" label-width="100px">
+<!--           输入框-->
+            <el-input v-if="issk.propertytype==4"  v-model="productpropertyinpiut" prop="productpropertyinpiut"></el-input>
+<!--           下拉框-->
+            <el-select v-if="issk.propertytype==1" v-model="productpropertyselect" placeholder="请选择" prop="productpropertyselect">
+              <el-option v-for="(valu,index) in issk.values" :key="index"  :label="valu.propertyPriceNameCH" :value="valu.propertyPriceId"></el-option>
+            </el-select>
+<!--           单选框-->
+            <el-radio-group v-if="issk.propertytype==2" v-model="productpropertyradio" prop="productpropertyradio">
+              <el-radio v-for="valu in issk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceId">{{valu.propertyPriceNameCH}}</el-radio>
+            </el-radio-group>
+<!--           复选框-->
+            <el-checkbox-group v-if="issk.propertytype==3" v-model="productpropertycheckbox" prop="productpropertycheckbox">
+              <el-checkbox v-for="valu in issk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceNameCH"></el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
         </el-form-item>
 
       </el-form>
     </div>
 
-      <div style="margin-left: 530px" v-if="active==0">
+
+
+
+<!--    第三页商品图片-->
+    <div style="margin-left:200px;margin-top: 50px; width: 700px" v-show="active==2">
+      <el-form :model="addProductForm"  ref="addProductForm" >
+        <el-form-item label="图片" :label-width="formLabelWidth" prop="brandimgpath">
+          <div align="left">
+            <el-upload class="upload-demo" drag action="api/api/brand/uploadFile"
+                       :on-success="adduploadSuccess" :on-remove="addfiledelete"
+                       :file-list="filelist" ref="addupload"
+                       :before-upload="beforeAvatarUpload"
+                       multiple>
+              <div v-if="addProductForm.productimgpath==''">
+                <i class="el-icon-upload"></i>
+                <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
+              </div>
+              <div v-else>
+                <img :src="addProductForm.productimgpath" width="360px" height="180px">
+              </div>
+            </el-upload>
+            <div style="margin-left: 80px" class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过1024kb</div>
+          </div>
+        </el-form-item>
+
+      </el-form>
+    </div>
+<!-- 操控步骤条   -->
+      <div v-show="active==0" style="margin-left: 530px">
         <div>
-            <el-button type="primary" size="medium" @click="next">下一步，填写商品属性</el-button>
+            <el-button type="primary" size="medium" @click="active++">下一步，填写商品属性</el-button>
         </div>
       </div>
-      <div style="margin-left: 420px;width: 480px" v-if="active==1">
+      <div v-show="active==1" style="margin-left: 420px;width: 480px">
         <div style="float: left">
-          <el-button type="primary" size="medium" @click="nexts">上一步，填写商品信息</el-button>
+          <el-button type="primary" size="medium" @click="active--">上一步，填写商品信息</el-button>
         </div>
         <div style="float: right">
-          <el-button type="primary" size="medium" @click="addProduct()">点击提交</el-button>
+          <el-button type="primary" size="medium" @click="active++">下一步，上传商品图片</el-button>
+        </div>
+      </div>
+      <div v-show="active==2" style="margin-left: 420px;width: 480px">
+        <div style="float: left">
+          <el-button type="primary" size="medium" @click="active--">上一步，填写商品属性</el-button>
+        </div>
+        <div style="float: right">
+          <el-button type="primary" size="medium" @click="addProduct()">提交</el-button>
         </div>
       </div>
   </div>
@@ -73,7 +147,13 @@
             return {
                 //步骤条
                 active: 0,
-                productaddform:true,
+                isNotSKU:[],
+                isSKU:[],
+
+                productpropertyinpiut:'',
+                productpropertyselect:'',
+                productpropertyradio:'',
+                productpropertycheckbox:[],
                 //添加商品的对象
                 addProductForm:{
                     productName:'',
@@ -83,7 +163,7 @@
                     productPrice:'',
                     productStock:'',
                     productSortNum:'',
-
+                    productimgpath:'',
                     addproductPropertyCategory:'',
                 },
                 productPropertyCategory:'',
@@ -91,7 +171,8 @@
                 productBrand:[],
                 //宽度
                 formLabelWidth: '220px',
-
+                //文件上传，
+                filelist:[],
                 //分类name拼接
                 categoryData:[],
                 categoryTypeName:'',
@@ -113,25 +194,76 @@
                     self.$message({showClose: true,message: '系统错误！',type: 'error'});
                 })
             },
-
+            //添加
             addProduct(){
                 this.addProductForm.addproductPropertyCategory=this.productPropertyCategory;
                 var aa= this.addProductForm.addproductPropertyCategory;
                 this.$message({showClose: true,message: aa,type: 'error'});
             },
-            //步骤条
-            next() {
-                if (this.active++ > 2) this.active = 0;
-                  if(this.active==1){
-                      this.productaddform=false;
+            //属性
+            getPropertyData(productPropertyCategory){
+                this.isNotSKU=[];
+                this.isSKU=[];
+                var self=this;
+              this.$axios.get("api/api/property/getPropertyDataByCategoryId?propertytypeId="+productPropertyCategory).then(function (res) {
+                  if(res.data.code==110){
+
+                      let propertydata =res.data.data;
+
+                      if(propertydata.length>0){
+                          for (let i = 0; i < propertydata.length; i++) {
+                              if(propertydata[i].propertyisSKU==1){
+                                  if (propertydata.propertytype!=4){
+                                      self.$axios.get("api/api/property/getPropertyPrice?propertyId="+propertydata[i].propertyid).then(function (res) {
+                                          propertydata[i].values=res.data.data;
+                                          self.isSKU.push(propertydata[i])
+                                      })
+                                  }else{
+                                      self.isSKU.push(propertydata[i])
+                                  }
+                              }else if(propertydata[i].propertyisSKU==2){
+                                  if (propertydata.propertytype!=4){
+                                      self.$axios.get("api/api/property/getPropertyPrice?propertyId="+propertydata[i].propertyid).then(function (res) {
+                                          propertydata[i].values=res.data.data;
+                                          self.isNotSKU.push(propertydata[i])
+                                      })
+                                  }else{
+                                  self.isNotSKU.push(propertydata[i])
+                                  }
+                              }
+                          }
+                          console.log(self.isSKU)
+                          console.log(self.isNotSKU)
+                      }else{
+                          self.isNotSKU=[];
+                          self.isSKU=[];
+                      }
+                  }else if(res.data.code==120){
+                      self.$message({showClose:true,message:res.data.message,type:'error'})
                   }
+              })
             },
-            nexts() {
-                var a=this.active;
-                if (this.active-- < 0 ) this.active = a;
-                  if(this.active==0){
-                    this.productaddform=true;
-                  }
+            beforeAvatarUpload(file) {
+                const isJPG = file.type === 'image/jpeg';
+                const isLt2M = file.size / 1024 / 1024 < 1;
+
+                if (!isJPG) {
+                    this.$message.error('上传头像图片只能是 JPG 格式!');
+                }
+                if (!isLt2M) {
+                    this.$message.error('上传头像图片大小不能超过 2MB!');
+                }
+                return isJPG && isLt2M;
+            },
+            //添加文件上传成功的钩子
+            adduploadSuccess(response, file, fileList) {
+                this.addProductForm.productimgpath = response.data;
+                this.$message.success("图片上传成功");
+            },
+            //添加文件列表移除文件时的钩子
+            addfiledelete(file, fileList){
+                this.addProductForm.productimgpath='';
+                // this.$message.success("图片已清除111");
             },
             //分类name拼接
             formaterTypeData:function(){

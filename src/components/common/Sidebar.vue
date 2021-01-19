@@ -64,7 +64,7 @@ export default {
                 {
                     icon: 'el-icon-s-shop',
                     index: '2',
-                    title: '商品',
+                    title: '商品管理',
                     subs: [
                         {
                             icon:'el-icon-s-grid',

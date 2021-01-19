@@ -48,10 +48,42 @@
             </el-select>
           </div>
         </el-form-item>
+        <el-form-item v-if="isSKU.length>0" label="商品参数" :label-width="formLabelWidth">
+          <el-form-item v-for="issk in  isSKU" :key="issk.propertyid" :label="issk.propertynameCH" label-width="100px">
+            <!--           输入框-->
+<!--            <el-input v-if="issk.propertytype==4"  v-model="productpropertyinpiut" prop="productpropertyinpiut"></el-input>-->
+<!--            &lt;!&ndash;           下拉框&ndash;&gt;-->
+<!--            <el-select v-if="issk.propertytype==1" v-model="productpropertyselect" placeholder="请选择" prop="productpropertyselect">-->
+<!--              <el-option v-for="(valu,index) in issk.values" :key="index"  :label="valu.propertyPriceNameCH" :value="valu.propertyPriceId"></el-option>-->
+<!--            </el-select>-->
+<!--            &lt;!&ndash;           单选框&ndash;&gt;-->
+<!--            <el-radio-group v-if="issk.propertytype==2" v-model="productpropertyradio" prop="productpropertyradio">-->
+<!--              <el-radio v-for="valu in issk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceId">{{valu.propertyPriceNameCH}}</el-radio>-->
+<!--            </el-radio-group>-->
+            <!--           复选框-->
+            <el-checkbox-group v-if="issk.propertytype==3" v-model="issk.checkboxValues" @change="checkboxValuesChange">
+              <el-checkbox v-for="valu in issk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceNameCH"></el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
+        </el-form-item>
+<!--  表格-->
+        <el-form-item v-show="productDKRJ" label="商品参数" :label-width="formLabelWidth">
+          <el-table :data="a" border style="width: 100%;" >
+            <el-table-column label="序号" width="40px" >
+              <template slot-scope="scope">
+                {{ scope.$index+1}}
+              </template>
+            </el-table-column>
+            <el-table-column prop="productPrice" label="价格"> </el-table-column>
+            <el-table-column prop="productStock" label="库存"> </el-table-column>
+          </el-table>
+        </el-form-item>
+
+
         <el-form-item v-if="isNotSKU.length>0" label="商品规格" :label-width="formLabelWidth">
           <el-form-item v-for="isNotsk in  isNotSKU" :key="isNotsk.propertyid" :label="isNotsk.propertynameCH" label-width="100px">
 <!--           输入框-->
-            <el-input v-if="isNotsk.propertytype==4"  v-model="productpropertyinpiut" prop="productpropertyinpiut"></el-input>
+            <el-input v-if="isNotsk.propertytype==4"  v-model="isNotsk.propertyid" prop="productpropertyinpiut"></el-input>
 <!--           下拉框-->
             <el-select v-if="isNotsk.propertytype==1" placeholder="请选择"  v-model="productpropertyselect" prop="productpropertyselect">
               <el-option v-for="(valu,index) in isNotsk.values" :key="index" :label="valu.propertyPriceNameCH" :value="valu.propertyPriceId" ></el-option>
@@ -66,25 +98,6 @@
             </el-checkbox-group>
           </el-form-item>
         </el-form-item>
-        <el-form-item v-if="isSKU.length>0" label="商品参数" :label-width="formLabelWidth">
-          <el-form-item v-for="issk in  isSKU" :key="issk.propertyid" :label="issk.propertynameCH" label-width="100px">
-<!--           输入框-->
-            <el-input v-if="issk.propertytype==4"  v-model="productpropertyinpiut" prop="productpropertyinpiut"></el-input>
-<!--           下拉框-->
-            <el-select v-if="issk.propertytype==1" v-model="productpropertyselect" placeholder="请选择" prop="productpropertyselect">
-              <el-option v-for="(valu,index) in issk.values" :key="index"  :label="valu.propertyPriceNameCH" :value="valu.propertyPriceId"></el-option>
-            </el-select>
-<!--           单选框-->
-            <el-radio-group v-if="issk.propertytype==2" v-model="productpropertyradio" prop="productpropertyradio">
-              <el-radio v-for="valu in issk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceId">{{valu.propertyPriceNameCH}}</el-radio>
-            </el-radio-group>
-<!--           复选框-->
-            <el-checkbox-group v-if="issk.propertytype==3" v-model="productpropertycheckbox" prop="productpropertycheckbox">
-              <el-checkbox v-for="valu in issk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceNameCH"></el-checkbox>
-            </el-checkbox-group>
-          </el-form-item>
-        </el-form-item>
-
       </el-form>
     </div>
 
@@ -147,8 +160,15 @@
             return {
                 //步骤条
                 active: 0,
+                //sku属性数据
                 isNotSKU:[],
+                //非sku属性
                 isSKU:[],
+                a:[],
+                productDKRJ:false,
+                aa:[],
+
+
 
                 productpropertyinpiut:'',
                 productpropertyselect:'',
@@ -200,22 +220,21 @@
                 var aa= this.addProductForm.addproductPropertyCategory;
                 this.$message({showClose: true,message: aa,type: 'error'});
             },
-            //属性
+            //属性sku spu
             getPropertyData(productPropertyCategory){
                 this.isNotSKU=[];
                 this.isSKU=[];
                 var self=this;
               this.$axios.get("api/api/property/getPropertyDataByCategoryId?propertytypeId="+productPropertyCategory).then(function (res) {
                   if(res.data.code==110){
-
                       let propertydata =res.data.data;
-
                       if(propertydata.length>0){
                           for (let i = 0; i < propertydata.length; i++) {
                               if(propertydata[i].propertyisSKU==1){
                                   if (propertydata.propertytype!=4){
                                       self.$axios.get("api/api/property/getPropertyPrice?propertyId="+propertydata[i].propertyid).then(function (res) {
                                           propertydata[i].values=res.data.data;
+                                          propertydata[i].checkboxValues=[];
                                           self.isSKU.push(propertydata[i])
                                       })
                                   }else{
@@ -232,8 +251,8 @@
                                   }
                               }
                           }
-                          console.log(self.isSKU)
-                          console.log(self.isNotSKU)
+                          // console.log(self.isSKU)
+                          // console.log(self.isNotSKU)
                       }else{
                           self.isNotSKU=[];
                           self.isSKU=[];
@@ -243,18 +262,74 @@
                   }
               })
             },
+            //触发笛卡尔积  复选框内容改变事件
+            checkboxValuesChange(){
+                //判断是否要生成笛卡尔积
+                this.productDKRJ=true;
+                for (let i = 0; i <this.isSKU.length ; i++) {
+                    if(this.isSKU[i].checkboxValues.length==0){
+                        this.productDKRJ=false;
+                        break;
+                    }
+                }
+                if(this.productDKRJ==true){
+                    // for (let i = 0; i <this.isSKU.length; i++) {
+                    //     let aaa=[];
+                    //     let bbb=[];
+                    //     aaa=this.isSKU[i].checkboxValues
+                    //     bbb=this.isSKU[i].checkboxValues
+                    //     // this.discarts(this.isSKU[i].checkboxValues);
+                    // console.log(aaa)
+                    // console.log(bbb)
+                    //
+                    // }
+
+                    this.productDKRJ=true;
+                }
+            },
+
+            discarts() {
+                console.log('笛卡尔积')
+                //笛卡尔积
+                var twodDscartes = function (a, b) {
+                    var ret = [];
+                    for (var i = 0; i < a.length; i++) {
+                        for (var j = 0; j < b.length; j++) {
+                            ret.push(ft(a[i], b[j]));
+                        }
+                    }
+                    return ret;
+                }
+                var ft = function (a, b) {
+                    if (!(a instanceof Array))
+                        a = [a];
+                    var ret = a.slice(0);
+                    ret.push(b);
+                    return ret;
+                }
+                //多个一起做笛卡尔积
+                return (function (data) {
+                    var len = data.length;
+                    if (len == 0)
+                        return [];
+                    else if (len == 1)
+                        return data[0];
+                    else {
+                        var r = data[0];
+                        for (var i = 1; i < len; i++) {
+                            r = twodDscartes(r, data[i]);
+                        }
+                        return r;
+                    }
+                })(arguments.length > 1 ? arguments : arguments[0]);
+            },
+            //文件上传判断
             beforeAvatarUpload(file) {
                 const isJPG = file.type === 'image/jpeg';
                 const isLt2M = file.size / 1024 / 1024 < 1;
-
-                if (!isJPG) {
-                    this.$message.error('上传头像图片只能是 JPG 格式!');
-                }
-                if (!isLt2M) {
-                    this.$message.error('上传头像图片大小不能超过 2MB!');
-                }
-                return isJPG && isLt2M;
-            },
+                if (!isJPG) {this.$message.error('上传头像图片只能是 JPG 格式!');}
+                if (!isLt2M) {this.$message.error('上传头像图片大小不能超过 2MB!');}
+                return isJPG && isLt2M;},
             //添加文件上传成功的钩子
             adduploadSuccess(response, file, fileList) {
                 this.addProductForm.productimgpath = response.data;
@@ -315,6 +390,11 @@
 </script>
 
 <style scoped>
-
+  /deep/.el-table th > .cell {
+    text-align: center;
+  }
+  /deep/.el-table .cell {
+    text-align: center;
+  }
 
 </style>

@@ -328,19 +328,23 @@
             // 添加
             addProperty (addPropertyForm) {
                 var self = this;
-                console.log(this.addPropertyForm.propertytypeId)
+                if (this.addPropertyForm.propertyisSKU == 1 && this.addPropertyForm.propertytype != 3) {
+                    self.$message({showClose: true, message: 'SKU属性只能是复选框！', type: 'error'});
+
+                } else {
                 this.$axios.post("api/api/property/add", this.$qs.stringify(this.addPropertyForm)).then(function (res) {
                     if (res.data.code == 110) {
-                        self.$message({showClose: true,message: '添加成功！',type: 'success'});
+                        self.$message({showClose: true, message: '添加成功！', type: 'success'});
                         self.$refs[addPropertyForm].resetFields();
-                        self.addbutton=false;
+                        self.addbutton = false;
                         self.getData();
-                    }else if(res.data.code == 120){
+                    } else if (res.data.code == 120) {
                         self.$message.error(res.data.message);
                     }
                 }).catch(function () {
-                    self.$message({showClose: true,message: '添加失败！',type: 'success'});
+                    self.$message({showClose: true, message: '添加失败！', type: 'error'});
                 })
+            }
             },
             // 修改回显
             hx(row){

@@ -48,38 +48,29 @@
             </el-select>
           </div>
         </el-form-item>
+<!--    商品参数-->
         <el-form-item v-if="isSKU.length>0" label="商品参数" :label-width="formLabelWidth">
           <el-form-item v-for="issk in  isSKU" :key="issk.propertyid" :label="issk.propertynameCH" label-width="100px">
-            <!--           输入框-->
-<!--            <el-input v-if="issk.propertytype==4"  v-model="productpropertyinpiut" prop="productpropertyinpiut"></el-input>-->
-<!--            &lt;!&ndash;           下拉框&ndash;&gt;-->
-<!--            <el-select v-if="issk.propertytype==1" v-model="productpropertyselect" placeholder="请选择" prop="productpropertyselect">-->
-<!--              <el-option v-for="(valu,index) in issk.values" :key="index"  :label="valu.propertyPriceNameCH" :value="valu.propertyPriceId"></el-option>-->
-<!--            </el-select>-->
-<!--            &lt;!&ndash;           单选框&ndash;&gt;-->
-<!--            <el-radio-group v-if="issk.propertytype==2" v-model="productpropertyradio" prop="productpropertyradio">-->
-<!--              <el-radio v-for="valu in issk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceId">{{valu.propertyPriceNameCH}}</el-radio>-->
-<!--            </el-radio-group>-->
-            <!--           复选框-->
+<!--                       复选框-->
             <el-checkbox-group v-if="issk.propertytype==3" v-model="issk.checkboxValues" @change="checkboxValuesChange">
               <el-checkbox v-for="valu in issk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceNameCH"></el-checkbox>
             </el-checkbox-group>
           </el-form-item>
         </el-form-item>
-<!--  表格-->
-        <el-form-item v-show="productDKRJ" label="商品参数" :label-width="formLabelWidth">
-          <el-table :data="a" border style="width: 100%;" >
+<!--    表格-->
+        <el-form-item v-show="productDKRJTable" label="商品参数" :label-width="formLabelWidth">
+          <el-table :data="DKRJData" border style="width: 100%;" >
             <el-table-column label="序号" width="40px" >
               <template slot-scope="scope">
                 {{ scope.$index+1}}
               </template>
             </el-table-column>
-            <el-table-column prop="productPrice" label="价格"> </el-table-column>
-            <el-table-column prop="productStock" label="库存"> </el-table-column>
+            <el-table-column v-for="c in addProductTableCols" :key="c.id" :label="c.nameCH" :prop="c.name"></el-table-column>
+            <el-table-column prop="productPrice" label="价格"><template slot-scope="scope"><el-input/></template> </el-table-column>
+            <el-table-column prop="productStock" label="库存"> <template slot-scope="scope"><el-input/></template></el-table-column>
           </el-table>
         </el-form-item>
-
-
+<!--      商品规格-->
         <el-form-item v-if="isNotSKU.length>0" label="商品规格" :label-width="formLabelWidth">
           <el-form-item v-for="isNotsk in  isNotSKU" :key="isNotsk.propertyid" :label="isNotsk.propertynameCH" label-width="100px">
 <!--           输入框-->
@@ -100,10 +91,6 @@
         </el-form-item>
       </el-form>
     </div>
-
-
-
-
 <!--    第三页商品图片-->
     <div style="margin-left:200px;margin-top: 50px; width: 700px" v-show="active==2">
       <el-form :model="addProductForm"  ref="addProductForm" >
@@ -159,15 +146,17 @@
         data() {
             return {
                 //步骤条
-                active: 0,
+                active: 1,
                 //sku属性数据
                 isNotSKU:[],
                 //非sku属性
                 isSKU:[],
-                a:[],
-                productDKRJ:false,
-                aa:[],
-
+                //笛卡尔积数据展示表格
+                productDKRJTable:false,
+                //添加商品动态表格头
+                addProductTableCols:[],
+                //笛卡尔积之后的SKU数据
+                DKRJData:[],
 
 
                 productpropertyinpiut:'',
@@ -197,6 +186,7 @@
                 categoryData:[],
                 categoryTypeName:'',
                 categoryTypes:[],
+
             };
         },
 
@@ -216,9 +206,7 @@
             },
             //添加
             addProduct(){
-                this.addProductForm.addproductPropertyCategory=this.productPropertyCategory;
-                var aa= this.addProductForm.addproductPropertyCategory;
-                this.$message({showClose: true,message: aa,type: 'error'});
+                this.$message({showClose: true,message: "添加",type: 'success'});
             },
             //属性sku spu
             getPropertyData(productPropertyCategory){
@@ -264,65 +252,56 @@
             },
             //触发笛卡尔积  复选框内容改变事件
             checkboxValuesChange(){
-                //判断是否要生成笛卡尔积
-                this.productDKRJ=true;
+                //清空动态列头
+                this.addProductTableCols=[];
+                this.DKRJData=[];
+
+                this.productDKRJTable=true;
                 for (let i = 0; i <this.isSKU.length ; i++) {
+                    //循环选中的复选框数组，决定是否进行笛卡尔积
                     if(this.isSKU[i].checkboxValues.length==0){
-                        this.productDKRJ=false;
+                        this.productDKRJTable=false;
                         break;
                     }
+                    //添加动态列头名称
+                    this.addProductTableCols.push({"id":this.isSKU[i].propertyid,"nameCH":this.isSKU[i].propertynameCH,"name":this.isSKU[i].propertyname});
                 }
-                if(this.productDKRJ==true){
-                    // for (let i = 0; i <this.isSKU.length; i++) {
-                    //     let aaa=[];
-                    //     let bbb=[];
-                    //     aaa=this.isSKU[i].checkboxValues
-                    //     bbb=this.isSKU[i].checkboxValues
-                    //     // this.discarts(this.isSKU[i].checkboxValues);
-                    // console.log(aaa)
-                    // console.log(bbb)
-                    //
-                    // }
-
-                    this.productDKRJ=true;
+                if(this.productDKRJTable==true){
+                    var DKRJ =[];
+                    for (let i = 0; i <this.isSKU.length; i++) {
+                        DKRJ.push(this.isSKU[i].checkboxValues)
+                    }
+                    //调用笛卡尔积方法 获取数据‘
+                    var DKRJData=this.calcDescartes(DKRJ);
+                    //////
+                    for (let i = 0; i <DKRJData.length ; i++) {
+                        //得到数据
+                        let valuesAttr=DKRJData[i];
+                        let  tableValue={};
+                        for (let j = 0; j < valuesAttr.length; j++) {
+                            let key=this.addProductTableCols[j].name;
+                            tableValue[key]=valuesAttr[j];
+                        }
+                        this.DKRJData.push(tableValue);
+                    }
                 }
             },
+             //笛卡尔积
+             calcDescartes (array) {
+                  if (array.length < 2) return array[0] || [];
+                  return [].reduce.call(array, function (col, set) {
+                      var res = [];
+                      col.forEach(function (c) {
+                          set.forEach(function (s) {
+                              var t = [].concat(Array.isArray(c) ? c : [c]);
+                              t.push(s);
+                              res.push(t);
+                          })
+                      });
+                      return res;
+                  });
+              },
 
-            discarts() {
-                console.log('笛卡尔积')
-                //笛卡尔积
-                var twodDscartes = function (a, b) {
-                    var ret = [];
-                    for (var i = 0; i < a.length; i++) {
-                        for (var j = 0; j < b.length; j++) {
-                            ret.push(ft(a[i], b[j]));
-                        }
-                    }
-                    return ret;
-                }
-                var ft = function (a, b) {
-                    if (!(a instanceof Array))
-                        a = [a];
-                    var ret = a.slice(0);
-                    ret.push(b);
-                    return ret;
-                }
-                //多个一起做笛卡尔积
-                return (function (data) {
-                    var len = data.length;
-                    if (len == 0)
-                        return [];
-                    else if (len == 1)
-                        return data[0];
-                    else {
-                        var r = data[0];
-                        for (var i = 1; i < len; i++) {
-                            r = twodDscartes(r, data[i]);
-                        }
-                        return r;
-                    }
-                })(arguments.length > 1 ? arguments : arguments[0]);
-            },
             //文件上传判断
             beforeAvatarUpload(file) {
                 const isJPG = file.type === 'image/jpeg';
@@ -381,9 +360,6 @@
             this.getProductBrandData();
             this.formaterTypeData();
         },watch:{
-            productPropertyCategory:function(){
-
-            }
         },
 
     }

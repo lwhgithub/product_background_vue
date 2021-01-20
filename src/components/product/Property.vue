@@ -358,16 +358,20 @@
             // 修改
             updateBrand(){
                 var self = this;
-                this.$axios.put("api/api/property/update", this.$qs.stringify(this.updatePropertyForm)).then(function (res) {
-                    if (res.data.code == 110) {
-                        self.$message({showClose: true,message: '修改成功！',type: 'success'});
-                        self.updatePropertyForm={};
-                        self.updatebutton=false;
-                        self.getData();
-                    }else if(res.data.code == 120){
-                        self.$message.error(res.data.message);
-                    }
-                })
+                if (this.updatePropertyForm.propertyisSKU == 1 && this.updatePropertyForm.propertytype != 3) {
+                    self.$message({showClose: true, message: 'SKU属性只能是复选框！', type: 'error'});
+                } else {
+                    this.$axios.put("api/api/property/update", this.$qs.stringify(this.updatePropertyForm)).then(function (res) {
+                        if (res.data.code == 110) {
+                            self.$message({showClose: true, message: '修改成功！', type: 'success'});
+                            self.updatePropertyForm = {};
+                            self.updatebutton = false;
+                            self.getData();
+                        } else if (res.data.code == 120) {
+                            self.$message.error(res.data.message);
+                        }
+                    })
+                }
             },
             //调用查询属性值的方法
             togetPropertyPrice(row){

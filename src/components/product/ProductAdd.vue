@@ -36,6 +36,24 @@
                 <el-form-item label="排序" :label-width="formLabelWidth" prop="productSortNum">
                   <el-input-number v-model="addProductForm.productSortNum" :step="1"></el-input-number>
                 </el-form-item>
+                <el-form-item label="图片" :label-width="formLabelWidth" prop="brandimgpath">
+                  <div align="left">
+                    <el-upload class="upload-demo" drag action="api/api/brand/uploadFile"
+                               :on-success="adduploadSuccess" :on-remove="addfiledelete"
+                               :file-list="filelist" ref="addupload"
+                               :before-upload="beforeAvatarUpload"
+                               multiple>
+                      <div v-if="addProductForm.productimgpath==''">
+                        <i class="el-icon-upload"></i>
+                        <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
+                      </div>
+                      <div v-else>
+                        <img :src="addProductForm.productimgpath" width="360px" height="180px">
+                      </div>
+                    </el-upload>
+                    <div style="margin-left: 80px" class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过1024kb</div>
+                  </div>
+                </el-form-item>
               </el-form>
         </div>
 <!--    第二页商品属性-->
@@ -65,7 +83,11 @@
                 {{ scope.$index+1}}
               </template>
             </el-table-column>
-            <el-table-column v-for="c in addProductTableCols" :key="c.id" :label="c.nameCH" :prop="c.name"></el-table-column>
+            <el-table-column v-for="(c,index) in addProductTableCols" :key="index"
+                             :label="c.propertynameCH" :prop="c.propertyname">
+
+            </el-table-column>
+
             <el-table-column prop="productPrice" label="价格"><template slot-scope="scope"><el-input/></template> </el-table-column>
             <el-table-column prop="productStock" label="库存"> <template slot-scope="scope"><el-input/></template></el-table-column>
           </el-table>
@@ -74,7 +96,7 @@
         <el-form-item v-if="isNotSKU.length>0" label="商品规格" :label-width="formLabelWidth">
           <el-form-item v-for="isNotsk in  isNotSKU" :key="isNotsk.propertyid" :label="isNotsk.propertynameCH" label-width="100px">
 <!--           输入框-->
-            <el-input v-if="isNotsk.propertytype==4"  v-model="isNotsk.propertyid" prop="productpropertyinpiut"></el-input>
+            <el-input v-if="isNotsk.propertytype==4"  v-model="productpropertyinpiut" prop="productpropertyinpiut"></el-input>
 <!--           下拉框-->
             <el-select v-if="isNotsk.propertytype==1" placeholder="请选择"  v-model="productpropertyselect" prop="productpropertyselect">
               <el-option v-for="(valu,index) in isNotsk.values" :key="index" :label="valu.propertyPriceNameCH" :value="valu.propertyPriceId" ></el-option>
@@ -146,7 +168,7 @@
         data() {
             return {
                 //步骤条
-                active: 1,
+                active: 0,
                 //sku属性数据
                 isNotSKU:[],
                 //非sku属性
@@ -173,7 +195,10 @@
                     productStock:'',
                     productSortNum:'',
                     productimgpath:'',
-                    addproductPropertyCategory:'',
+                    productTypeid:'',
+                },
+                addProductPropertyForm:{
+
                 },
                 productPropertyCategory:'',
                 //商品品牌的数组
@@ -206,10 +231,22 @@
             },
             //添加
             addProduct(){
-                this.$message({showClose: true,message: "添加",type: 'success'});
+                var self=this;
+                this.addProductForm.productTypeid=this.productPropertyCategory;
+
+
+
             },
+
+
+
             //属性sku spu
             getPropertyData(productPropertyCategory){
+                //选择分类修改的时候，清空之前的SKU数据，并关闭表格
+                this.addProductTableCols=[];
+                this.DKRJData=[];
+                this.productDKRJTable=false;
+                //清空属性数据
                 this.isNotSKU=[];
                 this.isSKU=[];
                 var self=this;
@@ -223,6 +260,7 @@
                                       self.$axios.get("api/api/property/getPropertyPrice?propertyId="+propertydata[i].propertyid).then(function (res) {
                                           propertydata[i].values=res.data.data;
                                           propertydata[i].checkboxValues=[];
+                                          // propertydata[i].checkboxValues.propertyid=propertydata[i].propertyid
                                           self.isSKU.push(propertydata[i])
                                       })
                                   }else{
@@ -239,8 +277,6 @@
                                   }
                               }
                           }
-                          // console.log(self.isSKU)
-                          // console.log(self.isNotSKU)
                       }else{
                           self.isNotSKU=[];
                           self.isSKU=[];
@@ -252,10 +288,10 @@
             },
             //触发笛卡尔积  复选框内容改变事件
             checkboxValuesChange(){
+                console.log(this.isSKU)
                 //清空动态列头
                 this.addProductTableCols=[];
                 this.DKRJData=[];
-
                 this.productDKRJTable=true;
                 for (let i = 0; i <this.isSKU.length ; i++) {
                     //循环选中的复选框数组，决定是否进行笛卡尔积
@@ -264,25 +300,33 @@
                         break;
                     }
                     //添加动态列头名称
-                    this.addProductTableCols.push({"id":this.isSKU[i].propertyid,"nameCH":this.isSKU[i].propertynameCH,"name":this.isSKU[i].propertyname});
+                    this.addProductTableCols.push({"propertyid":this.isSKU[i].propertyid,"propertynameCH":this.isSKU[i].propertynameCH,"propertyname":this.isSKU[i].propertyname});
                 }
                 if(this.productDKRJTable==true){
                     var DKRJ =[];
                     for (let i = 0; i <this.isSKU.length; i++) {
                         DKRJ.push(this.isSKU[i].checkboxValues)
                     }
-                    //调用笛卡尔积方法 获取数据‘
+                    //调用笛卡尔积方法 获取数据
                     var DKRJData=this.calcDescartes(DKRJ);
                     //////
                     for (let i = 0; i <DKRJData.length ; i++) {
+                    if (this.isSKU.length==1){
+                        var valuesAttr=[];
+                        valuesAttr.push(DKRJData[i]);
+                    }else{
+                        var valuesAttr=DKRJData[i];
+                    }
                         //得到数据
-                        let valuesAttr=DKRJData[i];
-                        let  tableValue={};
+                        var tableValue={};
                         for (let j = 0; j < valuesAttr.length; j++) {
-                            let key=this.addProductTableCols[j].name;
+                            let key=this.addProductTableCols[j].propertyname;
                             tableValue[key]=valuesAttr[j];
                         }
                         this.DKRJData.push(tableValue);
+
+                        // console.log(this.addProductTableCols)
+                        // console.log(this.DKRJData)
                     }
                 }
             },
@@ -294,14 +338,10 @@
                       col.forEach(function (c) {
                           set.forEach(function (s) {
                               var t = [].concat(Array.isArray(c) ? c : [c]);
-                              t.push(s);
-                              res.push(t);
-                          })
-                      });
+                              t.push(s); res.push(t);
+                          })});
                       return res;
-                  });
-              },
-
+                  });},
             //文件上传判断
             beforeAvatarUpload(file) {
                 const isJPG = file.type === 'image/jpeg';
@@ -359,7 +399,8 @@
         created(){
             this.getProductBrandData();
             this.formaterTypeData();
-        },watch:{
+        },
+        watch:{
         },
 
     }

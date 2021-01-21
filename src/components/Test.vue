@@ -1,600 +1,484 @@
-<!--<template>-->
-<!--  <div style="margin-top: 50px">-->
-<!--    <el-form :model="value" ref="productAttrForm" label-width="120px" style="width: 720px" size="small">-->
-<!--      <el-form-item label="属性类型：">-->
-<!--        <el-select v-model="value.productAttributeCategoryId"-->
-<!--                   placeholder="请选择属性类型"-->
-<!--                   @change="handleProductAttrChange">-->
-<!--          <el-option-->
-<!--            v-for="item in productAttributeCategoryOptions"-->
-<!--            :key="item.value"-->
-<!--            :label="item.label"-->
-<!--            :value="item.value">-->
-<!--          </el-option>-->
-<!--        </el-select>-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="商品规格：">-->
-<!--        <el-card shadow="never" class="cardBg">-->
-<!--          <div v-for="(productAttr,idx) in selectProductAttr">-->
-<!--            {{productAttr.name}}：-->
-<!--            <el-checkbox-group v-if="productAttr.handAddStatus===0" v-model="selectProductAttr[idx].values">-->
-<!--              <el-checkbox v-for="item in getInputListArr(productAttr.inputList)" :label="item" :key="item"-->
-<!--                           class="littleMarginLeft"></el-checkbox>-->
-<!--            </el-checkbox-group>-->
-<!--            <div v-else>-->
-<!--              <el-checkbox-group v-model="selectProductAttr[idx].values">-->
-<!--                <div v-for="(item,index) in selectProductAttr[idx].options" style="display: inline-block"-->
-<!--                     class="littleMarginLeft">-->
-<!--                  <el-checkbox :label="item" :key="item"></el-checkbox>-->
-<!--                  <el-button type="text" class="littleMarginLeft" @click="handleRemoveProductAttrValue(idx,index)">删除-->
-<!--                  </el-button>-->
-<!--                </div>-->
-<!--              </el-checkbox-group>-->
-<!--              <el-input v-model="addProductAttrValue" style="width: 160px;margin-left: 10px" clearable></el-input>-->
-<!--              <el-button class="littleMarginLeft" @click="handleAddProductAttrValue(idx)">增加</el-button>-->
-<!--            </div>-->
-<!--          </div>-->
-<!--        </el-card>-->
-<!--        <el-table style="width: 100%;margin-top: 20px" :data="value.skuStockList" border>-->
-<!--          <el-table-column v-for="(item,index) in selectProductAttr" :label="item.name" :key="item.id" align="center">-->
-<!--            <template slot-scope="scope">-->
-<!--              {{getProductSkuSp(scope.row,index)}}-->
-<!--            </template>-->
-<!--          </el-table-column>-->
-<!--          <el-table-column label="销售价格" width="80" align="center">-->
-<!--            <template slot-scope="scope">-->
-<!--              <el-input v-model="scope.row.price"></el-input>-->
-<!--            </template>-->
-<!--          </el-table-column>-->
-<!--          <el-table-column label="商品库存" width="80" align="center">-->
-<!--            <template slot-scope="scope">-->
-<!--              <el-input v-model="scope.row.stock"></el-input>-->
-<!--            </template>-->
-<!--          </el-table-column>-->
-<!--          <el-table-column label="库存预警值" width="80" align="center">-->
-<!--            <template slot-scope="scope">-->
-<!--              <el-input v-model="scope.row.lowStock"></el-input>-->
-<!--            </template>-->
-<!--          </el-table-column>-->
-<!--          <el-table-column label="SKU编号" align="center">-->
-<!--            <template slot-scope="scope">-->
-<!--              <el-input v-model="scope.row.skuCode"></el-input>-->
-<!--            </template>-->
-<!--          </el-table-column>-->
-<!--          <el-table-column label="操作" width="80" align="center">-->
-<!--            <template slot-scope="scope">-->
-<!--              <el-button type="text" @click="handleRemoveProductSku(scope.$index, scope.row)">删除 </el-button>-->
-<!--            </template>-->
-<!--          </el-table-column>-->
-<!--        </el-table>-->
-<!--        <el-button type="primary" style="margin-top: 20px" @click="handleRefreshProductSkuList">刷新列表-->
-<!--        </el-button>-->
-<!--        <el-button type="primary" style="margin-top: 20px" @click="handleSyncProductSkuPrice">同步价格-->
-<!--        </el-button>-->
-<!--        <el-button type="primary" style="margin-top: 20px" @click="handleSyncProductSkuStock">同步库存-->
-<!--        </el-button>-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="属性图片：" v-if="hasAttrPic">-->
-<!--        <el-card shadow="never" class="cardBg">-->
-<!--          <div v-for="(item,index) in selectProductAttrPics">-->
-<!--            <span>{{item.name}}:</span>-->
-<!--            <single-upload v-model="item.pic"-->
-<!--                           style="width: 300px;display: inline-block;margin-left: 10px"></single-upload>-->
-<!--          </div>-->
-<!--        </el-card>-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="商品参数：">-->
-<!--        <el-card shadow="never" class="cardBg">-->
-<!--          <div v-for="(item,index) in selectProductParam" :class="{littleMarginTop:index!==0}">-->
-<!--            <div class="paramInputLabel">{{item.name}}:</div>-->
-<!--            <el-select v-if="item.inputType===1" class="paramInput" v-model="selectProductParam[index].value">-->
-<!--              <el-option-->
-<!--                v-for="item in getParamInputList(item.inputList)"-->
-<!--                :key="item"-->
-<!--                :label="item"-->
-<!--                :value="item">-->
-<!--              </el-option>-->
-<!--            </el-select>-->
-<!--            <el-input v-else class="paramInput" v-model="selectProductParam[index].value"></el-input>-->
-<!--          </div>-->
-<!--        </el-card>-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="商品相册：">-->
-<!--        <multi-upload v-model="selectProductPics"></multi-upload>-->
-<!--      </el-form-item>-->
-<!--      <el-form-item label="规格参数：">-->
-<!--        <el-tabs v-model="activeHtmlName" type="card">-->
-<!--          <el-tab-pane label="电脑端详情" name="pc">-->
-<!--            <tinymce :width="595" :height="300" v-model="value.detailHtml"></tinymce>-->
-<!--          </el-tab-pane>-->
-<!--          <el-tab-pane label="移动端详情" name="mobile">-->
-<!--            <tinymce :width="595" :height="300" v-model="value.detailMobileHtml"></tinymce>-->
-<!--          </el-tab-pane>-->
-<!--        </el-tabs>-->
-<!--      </el-form-item>-->
-<!--      <el-form-item style="text-align: center">-->
-<!--        <el-button size="medium" @click="handlePrev">上一步，填写商品促销</el-button>-->
-<!--        <el-button type="primary" size="medium" @click="handleNext">下一步，选择商品关联</el-button>-->
-<!--      </el-form-item>-->
-<!--    </el-form>-->
-<!--  </div>-->
-<!--</template>-->
+<template>
+  <div>
+    <el-steps :active="active" finish-status="success">
+      <el-step title="基本信息"></el-step>
+      <el-step title="商品属性"></el-step>
+      <el-step title="商品图片"></el-step>
+    </el-steps>
 
-<!--<script>-->
-<!--    import {fetchList as fetchProductAttrCateList} from '@/api/productAttrCate'-->
-<!--    import {fetchList as fetchProductAttrList} from '@/api/productAttr'-->
-<!--    import SingleUpload from '@/components/Upload/singleUpload'-->
-<!--    import MultiUpload from '@/components/Upload/multiUpload'-->
-<!--    import Tinymce from '@/components/Tinymce'-->
+    <br/>
+    <br/>
+    <br/>
+    <div v-if="active==0">
+      <el-form :model="productForm" :rules="rules" ref="productForm" label-width="100px" class="demo-ruleForm">
+        <el-form-item label="商品名称" prop="name">
+          <el-input v-model="productForm.name"></el-input>
+        </el-form-item>
 
-<!--    export default {-->
-<!--        name: "ProductAttrDetail",-->
-<!--        components: {SingleUpload, MultiUpload, Tinymce},-->
-<!--        props: {-->
-<!--            value: Object,-->
-<!--            isEdit: {-->
-<!--                type: Boolean,-->
-<!--                default: false-->
-<!--            }-->
-<!--        },-->
-<!--        data() {-->
-<!--            return {-->
-<!--                //编辑模式时是否初始化成功-->
-<!--                hasEditCreated:false,-->
-<!--                //商品属性分类下拉选项-->
-<!--                productAttributeCategoryOptions: [],-->
-<!--                //选中的商品属性-->
-<!--                selectProductAttr: [],-->
-<!--                //选中的商品参数-->
-<!--                selectProductParam: [],-->
-<!--                //选中的商品属性图片-->
-<!--                selectProductAttrPics: [],-->
-<!--                //可手动添加的商品属性-->
-<!--                addProductAttrValue: '',-->
-<!--                //商品富文本详情激活类型-->
-<!--                activeHtmlName: 'pc'-->
-<!--            }-->
-<!--        },-->
-<!--        computed: {-->
-<!--            //是否有商品属性图片-->
-<!--            hasAttrPic() {-->
-<!--                if (this.selectProductAttrPics.length < 1) {-->
-<!--                    return false;-->
-<!--                }-->
-<!--                return true;-->
-<!--            },-->
-<!--            //商品的编号-->
-<!--            productId(){-->
-<!--                return this.value.id;-->
-<!--            },-->
-<!--            //商品的主图和画册图片-->
-<!--            selectProductPics:{-->
-<!--                get:function () {-->
-<!--                    let pics=[];-->
-<!--                    if(this.value.pic===undefined||this.value.pic==null||this.value.pic===''){-->
-<!--                        return pics;-->
-<!--                    }-->
-<!--                    pics.push(this.value.pic);-->
-<!--                    if(this.value.albumPics===undefined||this.value.albumPics==null||this.value.albumPics===''){-->
-<!--                        return pics;-->
-<!--                    }-->
-<!--                    let albumPics = this.value.albumPics.split(',');-->
-<!--                    for(let i=0;i<albumPics.length;i++){-->
-<!--                        pics.push(albumPics[i]);-->
-<!--                    }-->
-<!--                    return pics;-->
-<!--                },-->
-<!--                set:function (newValue) {-->
-<!--                    if (newValue == null || newValue.length === 0) {-->
-<!--                        this.value.pic = null;-->
-<!--                        this.value.albumPics = null;-->
-<!--                    } else {-->
-<!--                        this.value.pic = newValue[0];-->
-<!--                        this.value.albumPics = '';-->
-<!--                        if (newValue.length > 1) {-->
-<!--                            for (let i = 1; i < newValue.length; i++) {-->
-<!--                                this.value.albumPics += newValue[i];-->
-<!--                                if (i !== newValue.length - 1) {-->
-<!--                                    this.value.albumPics += ',';-->
-<!--                                }-->
-<!--                            }-->
-<!--                        }-->
-<!--                    }-->
-<!--                }-->
-<!--            }-->
-<!--        },-->
-<!--        created() {-->
-<!--            this.getProductAttrCateList();-->
-<!--        },-->
-<!--        watch: {-->
-<!--            productId:function (newValue) {-->
-<!--                if(!this.isEdit)return;-->
-<!--                if(this.hasEditCreated)return;-->
-<!--                if(newValue===undefined||newValue==null||newValue===0)return;-->
-<!--                this.handleEditCreated();-->
-<!--            }-->
-<!--        },-->
-<!--        methods: {-->
-<!--            handleEditCreated() {-->
-<!--                //根据商品属性分类id获取属性和参数-->
-<!--                if(this.value.productAttributeCategoryId!=null){-->
-<!--                    this.handleProductAttrChange(this.value.productAttributeCategoryId);-->
-<!--                }-->
-<!--                this.hasEditCreated=true;-->
-<!--            },-->
-<!--            getProductAttrCateList() {-->
-<!--                let param = {pageNum: 1, pageSize: 100};-->
-<!--                fetchProductAttrCateList(param).then(response => {-->
-<!--                    this.productAttributeCategoryOptions = [];-->
-<!--                    let list = response.data.list;-->
-<!--                    for (let i = 0; i < list.length; i++) {-->
-<!--                        this.productAttributeCategoryOptions.push({label: list[i].name, value: list[i].id});-->
-<!--                    }-->
-<!--                });-->
-<!--            },-->
-<!--            getProductAttrList(type, cid) {-->
-<!--                let param = {pageNum: 1, pageSize: 100, type: type};-->
-<!--                fetchProductAttrList(cid, param).then(response => {-->
-<!--                    let list = response.data.list;-->
-<!--                    if (type === 0) {-->
-<!--                        this.selectProductAttr = [];-->
-<!--                        for (let i = 0; i < list.length; i++) {-->
-<!--                            let options = [];-->
-<!--                            let values = [];-->
-<!--                            if (this.isEdit) {-->
-<!--                                if (list[i].handAddStatus === 1) {-->
-<!--                                    //编辑状态下获取手动添加编辑属性-->
-<!--                                    options = this.getEditAttrOptions(list[i].id);-->
-<!--                                }-->
-<!--                                //编辑状态下获取选中属性-->
-<!--                                values = this.getEditAttrValues(i);-->
-<!--                            }-->
-<!--                            this.selectProductAttr.push({-->
-<!--                                id: list[i].id,-->
-<!--                                name: list[i].name,-->
-<!--                                handAddStatus: list[i].handAddStatus,-->
-<!--                                inputList: list[i].inputList,-->
-<!--                                values: values,-->
-<!--                                options: options-->
-<!--                            });-->
-<!--                        }-->
-<!--                        if(this.isEdit){-->
-<!--                            //编辑模式下刷新商品属性图片-->
-<!--                            this.refreshProductAttrPics();-->
-<!--                        }-->
-<!--                    } else {-->
-<!--                        this.selectProductParam = [];-->
-<!--                        for (let i = 0; i < list.length; i++) {-->
-<!--                            let value=null;-->
-<!--                            if(this.isEdit){-->
-<!--                                //编辑模式下获取参数属性-->
-<!--                                value= this.getEditParamValue(list[i].id);-->
-<!--                            }-->
-<!--                            this.selectProductParam.push({-->
-<!--                                id: list[i].id,-->
-<!--                                name: list[i].name,-->
-<!--                                value: value,-->
-<!--                                inputType: list[i].inputType,-->
-<!--                                inputList: list[i].inputList-->
-<!--                            });-->
-<!--                        }-->
-<!--                    }-->
-<!--                });-->
-<!--            },-->
-<!--            //获取设置的可手动添加属性值-->
-<!--            getEditAttrOptions(id) {-->
-<!--                let options = [];-->
-<!--                for (let i = 0; i < this.value.productAttributeValueList.length; i++) {-->
-<!--                    let attrValue = this.value.productAttributeValueList[i];-->
-<!--                    if (attrValue.productAttributeId === id) {-->
-<!--                        let strArr = attrValue.value.split(',');-->
-<!--                        for (let j = 0; j < strArr.length; j++) {-->
-<!--                            options.push(strArr[j]);-->
-<!--                        }-->
-<!--                        break;-->
-<!--                    }-->
-<!--                }-->
-<!--                return options;-->
-<!--            },-->
-<!--            //获取选中的属性值-->
-<!--            getEditAttrValues(index) {-->
-<!--                let values = new Set();-->
-<!--                if (index === 0) {-->
-<!--                    for (let i = 0; i < this.value.skuStockList.length; i++) {-->
-<!--                        let sku = this.value.skuStockList[i];-->
-<!--                        let spData = JSON.parse(sku.spData);-->
-<!--                        if (spData!= null && spData.length>=1) {-->
-<!--                            values.add(spData[0].value);-->
-<!--                        }-->
-<!--                    }-->
-<!--                } else if (index === 1) {-->
-<!--                    for (let i = 0; i < this.value.skuStockList.length; i++) {-->
-<!--                        let sku = this.value.skuStockList[i];-->
-<!--                        let spData = JSON.parse(sku.spData);-->
-<!--                        if (spData!= null && spData.length>=2) {-->
-<!--                            values.add(spData[1].value);-->
-<!--                        }-->
-<!--                    }-->
-<!--                } else {-->
-<!--                    for (let i = 0; i < this.value.skuStockList.length; i++) {-->
-<!--                        let sku = this.value.skuStockList[i];-->
-<!--                        let spData = JSON.parse(sku.spData);-->
-<!--                        if (spData!= null && spData.length>=3) {-->
-<!--                            values.add(spData[2].value);-->
-<!--                        }-->
-<!--                    }-->
-<!--                }-->
-<!--                return Array.from(values);-->
-<!--            },-->
-<!--            //获取属性的值-->
-<!--            getEditParamValue(id){-->
-<!--                for(let i=0;i<this.value.productAttributeValueList.length;i++){-->
-<!--                    if(id===this.value.productAttributeValueList[i].productAttributeId){-->
-<!--                        return this.value.productAttributeValueList[i].value;-->
-<!--                    }-->
-<!--                }-->
-<!--            },-->
-<!--            handleProductAttrChange(value) {-->
-<!--                this.getProductAttrList(0, value);-->
-<!--                this.getProductAttrList(1, value);-->
-<!--            },-->
-<!--            getInputListArr(inputList) {-->
-<!--                return inputList.split(',');-->
-<!--            },-->
-<!--            handleAddProductAttrValue(idx) {-->
-<!--                let options = this.selectProductAttr[idx].options;-->
-<!--                if (this.addProductAttrValue == null || this.addProductAttrValue == '') {-->
-<!--                    this.$message({-->
-<!--                        message: '属性值不能为空',-->
-<!--                        type: 'warning',-->
-<!--                        duration: 1000-->
-<!--                    });-->
-<!--                    return-->
-<!--                }-->
-<!--                if (options.indexOf(this.addProductAttrValue) !== -1) {-->
-<!--                    this.$message({-->
-<!--                        message: '属性值不能重复',-->
-<!--                        type: 'warning',-->
-<!--                        duration: 1000-->
-<!--                    });-->
-<!--                    return;-->
-<!--                }-->
-<!--                this.selectProductAttr[idx].options.push(this.addProductAttrValue);-->
-<!--                this.addProductAttrValue = null;-->
-<!--            },-->
-<!--            handleRemoveProductAttrValue(idx, index) {-->
-<!--                this.selectProductAttr[idx].options.splice(index, 1);-->
-<!--            },-->
-<!--            getProductSkuSp(row, index) {-->
-<!--                let spData = JSON.parse(row.spData);-->
-<!--                if(spData!=null&&index<spData.length){-->
-<!--                    return spData[index].value;-->
-<!--                }else{-->
-<!--                    return null;-->
-<!--                }-->
-<!--            },-->
-<!--            handleRefreshProductSkuList() {-->
-<!--                this.$confirm('刷新列表将导致sku信息重新生成，是否要刷新', '提示', {-->
-<!--                    confirmButtonText: '确定',-->
-<!--                    cancelButtonText: '取消',-->
-<!--                    type: 'warning'-->
-<!--                }).then(() => {-->
-<!--                    this.refreshProductAttrPics();-->
-<!--                    this.refreshProductSkuList();-->
-<!--                });-->
-<!--            },-->
-<!--            handleSyncProductSkuPrice(){-->
-<!--                this.$confirm('将同步第一个sku的价格到所有sku,是否继续', '提示', {-->
-<!--                    confirmButtonText: '确定',-->
-<!--                    cancelButtonText: '取消',-->
-<!--                    type: 'warning'-->
-<!--                }).then(() => {-->
-<!--                    if(this.value.skuStockList!==null&&this.value.skuStockList.length>0){-->
-<!--                        let tempSkuList = [];-->
-<!--                        tempSkuList = tempSkuList.concat(tempSkuList,this.value.skuStockList);-->
-<!--                        let price=this.value.skuStockList[0].price;-->
-<!--                        for(let i=0;i<tempSkuList.length;i++){-->
-<!--                            tempSkuList[i].price=price;-->
-<!--                        }-->
-<!--                        this.value.skuStockList=[];-->
-<!--                        this.value.skuStockList=this.value.skuStockList.concat(this.value.skuStockList,tempSkuList);-->
-<!--                    }-->
-<!--                });-->
-<!--            },-->
-<!--            handleSyncProductSkuStock(){-->
-<!--                this.$confirm('将同步第一个sku的库存到所有sku,是否继续', '提示', {-->
-<!--                    confirmButtonText: '确定',-->
-<!--                    cancelButtonText: '取消',-->
-<!--                    type: 'warning'-->
-<!--                }).then(() => {-->
-<!--                    if(this.value.skuStockList!==null&&this.value.skuStockList.length>0){-->
-<!--                        let tempSkuList = [];-->
-<!--                        tempSkuList = tempSkuList.concat(tempSkuList,this.value.skuStockList);-->
-<!--                        let stock=this.value.skuStockList[0].stock;-->
-<!--                        let lowStock=this.value.skuStockList[0].lowStock;-->
-<!--                        for(let i=0;i<tempSkuList.length;i++){-->
-<!--                            tempSkuList[i].stock=stock;-->
-<!--                            tempSkuList[i].lowStock=lowStock;-->
-<!--                        }-->
-<!--                        this.value.skuStockList=[];-->
-<!--                        this.value.skuStockList=this.value.skuStockList.concat(this.value.skuStockList,tempSkuList);-->
-<!--                    }-->
-<!--                });-->
-<!--            },-->
-<!--            refreshProductSkuList() {-->
-<!--                this.value.skuStockList = [];-->
-<!--                let skuList = this.value.skuStockList;-->
-<!--                //只有一个属性时-->
-<!--                if (this.selectProductAttr.length === 1) {-->
-<!--                    let attr = this.selectProductAttr[0];-->
-<!--                    for (let i = 0; i < attr.values.length; i++) {-->
-<!--                        skuList.push({-->
-<!--                            spData: JSON.stringify([{key:attr.name,value:attr.values[i]}])-->
-<!--                        });-->
-<!--                    }-->
-<!--                } else if (this.selectProductAttr.length === 2) {-->
-<!--                    let attr0 = this.selectProductAttr[0];-->
-<!--                    let attr1 = this.selectProductAttr[1];-->
-<!--                    for (let i = 0; i < attr0.values.length; i++) {-->
-<!--                        if (attr1.values.length === 0) {-->
-<!--                            skuList.push({-->
-<!--                                spData: JSON.stringify([{key:attr0.name,value:attr0.values[i]}])-->
-<!--                            });-->
-<!--                            continue;-->
-<!--                        }-->
-<!--                        for (let j = 0; j < attr1.values.length; j++) {-->
-<!--                            let spData = [];-->
-<!--                            spData.push({key:attr0.name,value:attr0.values[i]});-->
-<!--                            spData.push({key:attr1.name,value:attr1.values[j]});-->
-<!--                            skuList.push({-->
-<!--                                spData: JSON.stringify(spData)-->
-<!--                            });-->
-<!--                        }-->
-<!--                    }-->
-<!--                } else {-->
-<!--                    let attr0 = this.selectProductAttr[0];-->
-<!--                    let attr1 = this.selectProductAttr[1];-->
-<!--                    let attr2 = this.selectProductAttr[2];-->
-<!--                    for (let i = 0; i < attr0.values.length; i++) {-->
-<!--                        if (attr1.values.length === 0) {-->
-<!--                            skuList.push({-->
-<!--                                spData: JSON.stringify([{key:attr0.name,value:attr0.values[i]}])-->
-<!--                            });-->
-<!--                            continue;-->
-<!--                        }-->
-<!--                        for (let j = 0; j < attr1.values.length; j++) {-->
-<!--                            if (attr2.values.length === 0) {-->
-<!--                                let spData = [];-->
-<!--                                spData.push({key:attr0.name,value:attr0.values[i]});-->
-<!--                                spData.push({key:attr1.name,value:attr1.values[j]});-->
-<!--                                skuList.push({-->
-<!--                                    spData: JSON.stringify(spData)-->
-<!--                                });-->
-<!--                                continue;-->
-<!--                            }-->
-<!--                            for (let k = 0; k < attr2.values.length; k++) {-->
-<!--                                let spData = [];-->
-<!--                                spData.push({key:attr0.name,value:attr0.values[i]});-->
-<!--                                spData.push({key:attr1.name,value:attr1.values[j]});-->
-<!--                                spData.push({key:attr2.name,value:attr2.values[k]});-->
-<!--                                skuList.push({-->
-<!--                                    spData: JSON.stringify(spData)-->
-<!--                                });-->
-<!--                            }-->
-<!--                        }-->
-<!--                    }-->
-<!--                }-->
-<!--            },-->
-<!--            refreshProductAttrPics() {-->
-<!--                this.selectProductAttrPics = [];-->
-<!--                if (this.selectProductAttr.length >= 1) {-->
-<!--                    let values = this.selectProductAttr[0].values;-->
-<!--                    for (let i = 0; i < values.length; i++) {-->
-<!--                        let pic=null;-->
-<!--                        if(this.isEdit){-->
-<!--                            //编辑状态下获取图片-->
-<!--                            pic=this.getProductSkuPic(values[i]);-->
-<!--                        }-->
-<!--                        this.selectProductAttrPics.push({name: values[i], pic: pic})-->
-<!--                    }-->
-<!--                }-->
-<!--            },-->
-<!--            //获取商品相关属性的图片-->
-<!--            getProductSkuPic(name){-->
-<!--                for(let i=0;i<this.value.skuStockList.length;i++){-->
-<!--                    let spData = JSON.parse(this.value.skuStockList[i].spData);-->
-<!--                    if(name===spData[0].value){-->
-<!--                        return this.value.skuStockList[i].pic;-->
-<!--                    }-->
-<!--                }-->
-<!--                return null;-->
-<!--            },-->
-<!--            //111111111-->
-<!--            //合并商品属性-->
-<!--            mergeProductAttrValue() {-->
-<!--                this.value.productAttributeValueList = [];-->
-<!--                for (let i = 0; i < this.selectProductAttr.length; i++) {-->
-<!--                    let attr = this.selectProductAttr[i];-->
-<!--                    if (attr.handAddStatus === 1 && attr.options != null && attr.options.length > 0) {-->
-<!--                        this.value.productAttributeValueList.push({-->
-<!--                            productAttributeId: attr.id,-->
-<!--                            value: this.getOptionStr(attr.options)-->
-<!--                        });-->
-<!--                    }-->
-<!--                }-->
-<!--                for (let i = 0; i < this.selectProductParam.length; i++) {-->
-<!--                    let param = this.selectProductParam[i];-->
-<!--                    this.value.productAttributeValueList.push({-->
-<!--                        productAttributeId: param.id,-->
-<!--                        value: param.value-->
-<!--                    });-->
-<!--                }-->
-<!--            },-->
-<!--            //合并商品属性图片-->
-<!--            mergeProductAttrPics() {-->
-<!--                for (let i = 0; i < this.selectProductAttrPics.length; i++) {-->
-<!--                    for (let j = 0; j < this.value.skuStockList.length; j++) {-->
-<!--                        let spData = JSON.parse(this.value.skuStockList[j].spData);-->
-<!--                        if (spData[0].value === this.selectProductAttrPics[i].name) {-->
-<!--                            this.value.skuStockList[j].pic = this.selectProductAttrPics[i].pic;-->
-<!--                        }-->
-<!--                    }-->
-<!--                }-->
-<!--            },-->
-<!--            getOptionStr(arr) {-->
-<!--                let str = '';-->
-<!--                for (let i = 0; i < arr.length; i++) {-->
-<!--                    str += arr[i];-->
-<!--                    if (i != arr.length - 1) {-->
-<!--                        str += ',';-->
-<!--                    }-->
-<!--                }-->
-<!--                return str;-->
-<!--            },-->
-<!--            handleRemoveProductSku(index, row) {-->
-<!--                let list = this.value.skuStockList;-->
-<!--                if (list.length === 1) {-->
-<!--                    list.pop();-->
-<!--                } else {-->
-<!--                    list.splice(index, 1);-->
-<!--                }-->
-<!--            },-->
-<!--            getParamInputList(inputList) {-->
-<!--                return inputList.split(',');-->
-<!--            },-->
-<!--            handlePrev() {-->
-<!--                this.$emit('prevStep')-->
-<!--            },-->
-<!--            handleNext() {-->
-<!--                this.mergeProductAttrValue();-->
-<!--                this.mergeProductAttrPics();-->
-<!--                this.$emit('nextStep')-->
-<!--            }-->
-<!--        }-->
-<!--    }-->
-<!--</script>-->
+        <el-form-item label="标题" prop="title">
+          <el-input v-model="productForm.title"></el-input>
+        </el-form-item>
 
-<!--<style scoped>-->
-<!--  .littleMarginLeft {-->
-<!--    margin-left: 10px;-->
-<!--  }-->
+        <el-form-item label="品牌" prop="bandId">
+          <el-select v-model="productForm.bandId" placeholder="请选择">
+            <el-option v-for="b in brandDatas" :key="b.id" :label="b.name" :value="b.id"></el-option>
+          </el-select>
+        </el-form-item>
 
-<!--  .littleMarginTop {-->
-<!--    margin-top: 10px;-->
-<!--  }-->
+        <el-form-item label="简介" prop="productdecs">
+          <el-input type="textarea" v-model="productForm.productdecs"></el-input>
+        </el-form-item>
 
-<!--  .paramInput {-->
-<!--    width: 250px;-->
-<!--  }-->
+        <el-form-item label="价格" prop="price">
+          <el-input-number v-model="productForm.price" :precision="2" :step="0.1"></el-input-number>
+        </el-form-item>
 
-<!--  .paramInputLabel {-->
-<!--    display: inline-block;-->
-<!--    width: 100px;-->
-<!--    text-align: right;-->
-<!--    padding-right: 10px-->
-<!--  }-->
+        <el-form-item label="库存" prop="stocks">
+          <template>
+            <el-input-number v-model="productForm.stocks" :step="10"></el-input-number>
+          </template>
+        </el-form-item>
 
-<!--  .cardBg {-->
-<!--    background: #F8F9FC;-->
-<!--  }-->
-<!--</style>-->
+        <el-form-item label="排序" prop="sortNum">
+          <template>
+            <el-input-number v-model="productForm.sortNum" :step="1"></el-input-number>
+          </template>
+        </el-form-item>
+
+        <!-- 图片插件  -->
+        <el-form-item label="主图" prop="imgPath">
+          <el-upload
+            class="avatar-uploader"
+            action="http://localhost:8080/api/band/uploadFile"
+            :show-file-list="false"
+            :on-success="handleAvatarSuccess"
+            :before-upload="beforeAvatarUpload">
+            <img v-if="imageUrl" :src="imageUrl" class="avatar">
+            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
+          </el-upload>
+        </el-form-item>
+
+        <el-form-item>
+          <el-button>重置</el-button>
+          <el-button type="primary" @click="next">下一步</el-button>
+        </el-form-item>
+      </el-form>
+
+
+
+    </div>
+    <div v-if="active==1">
+
+
+      <el-form :model="productForm2" label-width="100px" class="demo-ruleForm">
+
+        <el-form-item label="分类" prop="typeId">
+          <!--  改变 获取属性数据  -->
+          <el-select v-model="productForm2.typeId" placeholder="请选择" @change="getAttrData">
+            <el-option v-for="b in types" :key="b.id" :label="b.name" :value="b.id"></el-option>
+          </el-select>
+        </el-form-item>
+
+
+        <el-form-item v-if="SKUData.length>0" label="商品规格" prop="name">
+          <!--  颜色 color   大小  szie  -->
+          <el-form-item v-for="a in  SKUData" :key="a.id" :label="a.nameCH">
+            <!--  0 下拉框     1 单选框      2  复选框   3  输入框  -->
+            <!--  skuCK0color    skuCK1szie   -->
+            <el-checkbox-group  v-model="a.ckValues"  v-if="a.type==2" @change="skuChange">
+              <el-checkbox v-for="b in a.values" :key="b.id" :label="b.valueCH"></el-checkbox>
+            </el-checkbox-group>
+
+
+          </el-form-item>
+
+
+
+        </el-form-item>
+
+
+        <el-table
+          v-if="tableShow"
+          :data="tableSkuData"
+          style="width: 100%">
+          <!--   动态展示列头  sku属性中文名 -->
+          <el-table-column v-for="c in cols" :key="c.id" :label="c.nameCH" :prop="c.name">
+          </el-table-column>
+
+          <el-table-column
+            label="库存"
+            width="180">
+
+            <template slot-scope="scope">
+              <el-input v-model="scope.row.storcks"/>
+            </template>
+
+          </el-table-column>
+          <el-table-column
+            label="价格"
+            width="180">
+            <template slot-scope="scope">
+              <el-input v-model="scope.row.pricess"/>
+            </template>
+          </el-table-column>
+        </el-table>
+
+        <el-form-item v-if="attData.length>0" label="商品参数" prop="name">
+
+          <el-form-item v-for="a in  attData" :key="a.id" :label="a.nameCH">
+            <template slot-scope="scope">
+              <!--  0 下拉框     1 单选框      2  复选框   3  输入框  -->
+              <el-input v-if="a.type==3" v-model="a.ckValues"></el-input>
+
+              <el-select v-if="a.type==0" v-model="a.ckValues"  placeholder="请选择">
+                <el-option v-for="b in a.values" :key="b.id"  :label="b.valueCH" value="b.id"></el-option>
+              </el-select>
+
+              <el-radio-group  v-if="a.type==1"  v-model="a.ckValues"  >
+                <el-radio v-for="b in a.values" :key="b.id" :label="b.valueCH"></el-radio>
+              </el-radio-group>
+
+
+              <el-checkbox-group   v-if="a.type==2" v-model="a.ckValues" >
+                <el-checkbox v-for="b in a.values" :key="b.id" :label="b.valueCH" name="type"></el-checkbox>
+              </el-checkbox-group>
+
+
+            </template>
+          </el-form-item>
+
+        </el-form-item>
+
+        <el-button type="primary" @click="active--">上一步</el-button>
+        <el-button type="primary" @click="addProduct">添加</el-button>
+      </el-form>
+
+
+
+    </div>
+    <div v-if="active==2">
+      第三步信息
+    </div>
+  </div>
+</template>
+
+<script>
+    export default {
+        name: "AddProduct",
+        data() {
+            return {
+                active: 0,//步骤条的
+                /* 第一步相关的数据 */
+                productForm:{ // 商品的基本
+                    name:"",
+                    title:"",
+                    bandId:"",
+                    productdecs:"",
+                    price:0,
+                    stocks:0,
+                    sortNum:0,
+                    imgPath:""
+                },
+                rules:{},// 商品表单的验证规则
+                imageUrl:"",//图片显示用的
+
+                brandDatas:[], // 品牌数据   从接口拿数据
+                /* 第二步相关的数据  */
+                productForm2:{},
+                ajaxTypeData:[], //接口返回的数据
+                typeName:"", //递归拼接子节点的名称
+                types:[  //分类的数据
+                    /* {"id":7,name:"分类/电子产品/手机"},
+                     {"id":9,name:"分类/电子产品/笔记本"},
+                     {"id":8,name:"分类/服装/上衣"},
+                     {"id":10,name:"分类/服装/裤子"},
+                     {"id":11,name:"分类/家电/空调"},
+                     {"id":12,name:"分类/家电/洗衣机"},
+                     {"id":13,name:"分类/家电/冰箱"}*/],
+
+                /* 商品属性模块  */
+
+                attData:[],   //非sku的属性数据
+                SKUData:[], //sku属性数据
+
+
+                tableShow:false, //sku的table是否显示
+                cols:[],//skutable的动态表头
+                tableSkuData:[],//skutable的动态表头对应的表格数据
+                /*   看效果用的  */
+                storcks:"", // 库存
+                pricess:"", //  价格
+                aaa:"",
+                bbb:"",
+                ccc:"",
+            };
+        },
+        methods:{
+            //添加商品
+            addProduct:function(){
+                //商品的类型id 添加到productform
+                this.productForm.typeId=this.productForm2.typeId;
+                console.log(this.productForm);
+                //非sku的数据
+                console.log(this.attData); //[{id: c,namech:系统,name:system,ckvaluwse:ios},{},{}]
+                //sku数据
+                console.log(this.tableSkuData);
+                debugger;
+                //声明后台接参的atrr
+                let  atrrs=[];
+                for (let i = 0; i <this.attData.length ; i++) {
+                    let  attData={};
+                    attData[this.attData[i].name]=this.attData[i].ckValues;
+                    atrrs.push(attData);
+                }
+
+                this.productForm.attr=JSON.stringify(atrrs);
+                this.productForm.sku=JSON.stringify(this.tableSkuData); //传参是string   怎么将js json 转为字符串
+                console.log(this.$qs.stringify(this.productForm));
+                //发起请求  保存数据
+                this.$ajax.post("http://localhost:8080/api/product/add",this.$qs.stringify(this.productForm)).then(res=>{
+                    this.$message.success("添加成功");
+                })
+            },
+            /* 笛卡尔积    */
+            calcDescartes:function(array) {
+                if (array.length < 2) return array[0] || [];
+                return [].reduce.call(array, function (col, set) {
+                    var res = [];
+                    col.forEach(function (c) {
+                        set.forEach(function (s) {
+                            var t = [].concat(Array.isArray(c) ? c : [c]);
+                            t.push(s);
+                            res.push(t);
+                        })
+                    });
+                    return res;
+                });
+            },
+            //监听sku属性 改变事件
+            skuChange:function(){
+                //笛卡尔积的参数
+                let  kdej=[];
+                //清空表格数据
+                this.tableSkuData=[];
+                //清空动态表头数据
+                this.cols=[];
+                // console.log(this.SKUData);
+                //判断是否要生成笛卡尔积
+                let flag=true;
+                //遍历sku所有数据
+                for (let i = 0; i <this.SKUData.length ; i++) {
+                    //将sku属性 放入动态表头中
+                    this.cols.push({"id":this.SKUData[i].id,"nameCH":this.SKUData[i].nameCH,"name":this.SKUData[i].name});
+
+                    //将此属性选中的选项值放入笛卡尔积参数中
+                    //得到当前sku选中的值  颜色  选中的值 [红色,绿色]    尺寸 [l,x]
+                    kdej.push(this.SKUData[i].ckValues);
+                    //判断此sku的复选框是否为选中
+                    if(this.SKUData[i].ckValues.length==0){
+                        flag=false; // 不能生成笛卡尔积
+                        break;
+                    }
+                }
+                if(flag==true){
+                    //debugger;
+                    // alert("生成笛卡尔积");
+                    //生成table的数据  [[],[],[]]   [{},{},{}]
+                    let  datas=this.calcDescartes(kdej);
+                    //遍历数据  [[红色,16g],[绿色,16g],[黑色，16g]]
+                    for (let i = 0; i <datas.length ; i++) {
+                        //遍历笛卡尔积 的每一项   [红色,16g]  cols:[{"id":1,"name": ,"nameCH"}]
+
+                        let  jsonData={}; //笛卡尔积 转为json的对象
+                        for (let j = 0; j <datas[i].length ; j++) {
+                            //获取数据的key
+                            let  key=this.cols[j].name;
+                            jsonData[key]=datas[i][j]
+
+                        }
+                        this.tableSkuData.push(jsonData);
+                    }
+                    console.log(this.tableSkuData);
+                    console.log(datas);
+
+
+                }
+                this.tableShow=flag;
+            },
+            /*   根据typeid 查询属性数据和sku数据  */
+            getAttrData:function(typeId){
+                this.SKUData=[];
+                this.attData=[];
+                //发起请求 拿到属性数据
+                this.$ajax.get("http://localhost:8080/api/attr/queeryDataByTypeId?typeId="+typeId).then(res=>{
+                    // 所有的属性数据
+                    let attrDatas=res.data.data;  // 所有的属性数据    id  name  type   如果为 下拉框 单选框  复选框  values
+                    //判断分类是否有数据   更新 参数和规格
+                    if(attrDatas.length>0){
+                        //初始化  attData      SKUData
+                        for (let i = 0; i <attrDatas.length ; i++) {
+                            //判断是否为sku属性
+                            if(attrDatas[i].isSKU==0){
+
+                                if(attrDatas[i].type!=3){
+                                    //发起请求 查询此属性对应的选项值
+                                    this.$ajax.get("http://localhost:8080/api/attrvalue/queryDataByAid?aid="+attrDatas[i].id).then(res=>{
+                                        attrDatas[i].values=res.data.data;
+
+                                        this.attData.push(attrDatas[i]);
+                                    })
+                                }else{
+                                    this.attData.push(attrDatas[i]);
+                                }
+
+                            }else{
+                                if(attrDatas[i].type!=3){
+                                    //发起请求 查询此属性对应的选项值
+                                    this.$ajax.get("http://localhost:8080/api/attrvalue/queryDataByAid?aid="+attrDatas[i].id).then(res=>{
+                                        attrDatas[i].values=res.data.data;
+                                        attrDatas[i].ckValues=[];
+
+                                        this.SKUData.push(attrDatas[i]);
+                                    })
+                                }else{
+                                    attrDatas[i].ckValues=[];
+                                    this.SKUData.push(attrDatas[i]);
+                                }
+
+                            }
+                        }
+                    }else{
+                        this.SKUData=[];
+                        this.attData=[];
+                    }
+
+
+                })
+                //console.log(this.attData);
+            },
+            //初始化品牌数据
+            initBandData:function(){
+                let param={page:1,size:100000000};
+                this.$ajax.post("http://localhost:8080/api/band/queryPageData",this.$qs.stringify(param)).then(res=>{
+                    this.brandDatas=res.data.data.data;
+                });
+            },
+            //处理分类的下拉框   [{id:1,"name":"",pid:2},{}]
+            // {"id":7,name:"分类/电子产品/手机"},
+            formaterTypeData:function(){
+
+                this.$ajax.get("http://localhost:8080/api/type/getData").then(res=>{
+
+                    // [{id:1,"name":"",pid:2},{}]
+                    this.ajaxTypeData=res.data.data;
+                    //{"id":7,name:"分类/电子产品/手机"},
+                    //先找到子节点的数据   this.types;
+                    this.getChildrenType();
+                    debugger;
+                    //遍历所有的子节点
+                    for (let i = 0; i <this.types.length ; i++) {
+                        this.typeName=""; // 全局变量   临时存 层级名称
+                        //处理子节点的name属性
+                        this.chandleName(this.types[i]);
+                        //   a/b/c/f/d/e
+                        //给name重新赋值
+                        this.types[i].name=this.typeName.split("/").reverse().join("/");
+                    }
+
+                })
+            }, //给我一个节点  得到层级name
+            chandleName:function(node){
+                if(node.pid!=0){ //临界值
+                    this.typeName+="/"+node.name;
+                    //上级节点
+                    for (let i = 0; i <this.ajaxTypeData.length ; i++) {
+                        if(node.pid==this.ajaxTypeData[i].id){
+                            this.chandleName(this.ajaxTypeData[i]);
+                            break;
+                        }
+                    }
+
+                }else{
+                    this.typeName+="/"+node.name;
+                }
+            },
+            //得到types的数据      遍历所有ajaxtypedata
+            getChildrenType:function(){
+                //遍历所有的节点数据
+                for (let i = 0; i <this.ajaxTypeData.length ; i++) {
+                    let  node=this.ajaxTypeData[i];
+                    this.isChildrenNode(node);
+                }
+            },
+            isChildrenNode:function(node){
+                let rs=true; //标示
+                for (let i = 0; i <this.ajaxTypeData.length ; i++) {
+                    if(node.id==this.ajaxTypeData[i].pid){
+                        rs=false;
+                        break;
+                    }
+                }
+                if(rs==true){
+                    this.types.push(node);
+                }
+            },
+
+
+            /*  步骤条  下一页  */
+            next() {
+                this.formaterTypeData();
+                if (this.active++ > 1) this.active = 0;
+            },
+            handleAvatarSuccess(res, file) {
+                debugger;
+                //打断点 看怎么取返回值
+                this.productForm.imgPath=res.data;
+                //显示赋值
+                this.imageUrl=res.data;
+            },
+            beforeAvatarUpload(file) {
+                //限制类型    name  来限制
+                const isJPG = file.type === 'image/jpeg';
+                const isLt2M = file.size / 1024 / 1024 < 4;
+
+                if (!isJPG) {
+                    this.$message.error('上传头像图片只能是 JPG 格式!');
+                }
+                if (!isLt2M) {
+                    this.$message.error('上传头像图片大小不能超过 2MB!');
+                }
+                return isJPG && isLt2M;
+            },
+        },
+        created:function () {
+            //初始化 品牌数据
+            this.initBandData();
+        }
+    }
+</script>
+
+<style scoped>
+  .avatar-uploader .el-upload {
+    border: 1px dashed #d9d9d9;
+    border-radius: 6px;
+    cursor: pointer;
+    position: relative;
+    overflow: hidden;
+  }
+  .avatar-uploader .el-upload:hover {
+    border-color: #409EFF;
+  }
+  .avatar-uploader-icon {
+    font-size: 28px;
+    color: #8c939d;
+    width: 178px;
+    height: 178px;
+    line-height: 178px;
+    text-align: center;
+  }
+  .avatar {
+    width: 178px;
+    height: 178px;
+    display: block;
+  }
+</style>

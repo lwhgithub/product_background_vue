@@ -30,8 +30,8 @@
                 <el-form-item label="价格" :label-width="formLabelWidth" prop="productPrice">
                   <el-input-number v-model="addProductForm.productPrice" :precision="2" :step="1"></el-input-number>
                 </el-form-item>
-                <el-form-item label="库存" :label-width="formLabelWidth" prop="productStock">
-                  <el-input-number v-model="addProductForm.productStock" :step="10"></el-input-number>
+                <el-form-item label="库存" :label-width="formLabelWidth" prop="productStocks">
+                  <el-input-number v-model="addProductForm.productStocks" :step="10"></el-input-number>
                 </el-form-item>
                 <el-form-item label="排序" :label-width="formLabelWidth" prop="productSortNum">
                   <el-input-number v-model="addProductForm.productSortNum" :step="1"></el-input-number>
@@ -43,12 +43,12 @@
                                :file-list="filelist" ref="addupload"
                                :before-upload="beforeAvatarUpload"
                                multiple>
-                      <div v-if="addProductForm.productimgpath==''">
+                      <div v-if="addProductForm.productImgPath==''">
                         <i class="el-icon-upload"></i>
                         <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
                       </div>
                       <div v-else>
-                        <img :src="addProductForm.productimgpath" width="360px" height="180px">
+                        <img :src="addProductForm.productImgPath" width="360px" height="180px">
                       </div>
                     </el-upload>
                     <div style="margin-left: 80px" class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过1024kb</div>
@@ -88,54 +88,44 @@
 
             </el-table-column>
 
-            <el-table-column prop="productPrice" label="价格"><template slot-scope="scope"><el-input/></template> </el-table-column>
-            <el-table-column prop="productStock" label="库存"> <template slot-scope="scope"><el-input/></template></el-table-column>
+            <el-table-column prop="productPrice" label="价格">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.productPrice"/>
+              </template>
+            </el-table-column>
+            <el-table-column prop="productStocks" label="库存">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.productStocks"/>
+              </template>
+            </el-table-column>
           </el-table>
         </el-form-item>
 <!--      商品规格-->
         <el-form-item v-if="isNotSKU.length>0" label="商品规格" :label-width="formLabelWidth">
           <el-form-item v-for="isNotsk in  isNotSKU" :key="isNotsk.propertyid" :label="isNotsk.propertynameCH" label-width="100px">
+          <template slot-scope="scope">
 <!--           输入框-->
-            <el-input v-if="isNotsk.propertytype==4"  v-model="productpropertyinpiut" prop="productpropertyinpiut"></el-input>
+            <el-input v-if="isNotsk.propertytype==4"  v-model="isNotsk.checkboxValues" ></el-input>
 <!--           下拉框-->
-            <el-select v-if="isNotsk.propertytype==1" placeholder="请选择"  v-model="productpropertyselect" prop="productpropertyselect">
+            <el-select v-if="isNotsk.propertytype==1" placeholder="请选择"  v-model="isNotsk.checkboxValues">
               <el-option v-for="(valu,index) in isNotsk.values" :key="index" :label="valu.propertyPriceNameCH" :value="valu.propertyPriceId" ></el-option>
             </el-select>
 <!--           单选框-->
-            <el-radio-group v-if="isNotsk.propertytype==2" v-model="productpropertyradio" prop="productpropertyradio">
-              <el-radio v-for="valu in isNotsk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceId">{{valu.propertyPriceNameCH}}</el-radio>
+            <el-radio-group v-if="isNotsk.propertytype==2" v-model="isNotsk.checkboxValues">
+              <el-radio v-for="valu in isNotsk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceNameCH"></el-radio>
             </el-radio-group>
 <!--           复选框-->
-            <el-checkbox-group v-if="isNotsk.propertytype==3" v-model="productpropertycheckbox" prop="productpropertycheckbox">
-              <el-checkbox v-for="valu in isNotsk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceNameCH"></el-checkbox>
+            <el-checkbox-group v-if="isNotsk.propertytype==3" v-model="isNotsk.checkboxValues">
+              <el-checkbox v-for="valu in isNotsk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceNameCH" naem="type"></el-checkbox>
             </el-checkbox-group>
+          </template>
           </el-form-item>
         </el-form-item>
       </el-form>
     </div>
 <!--    第三页商品图片-->
     <div style="margin-left:200px;margin-top: 50px; width: 700px" v-show="active==2">
-      <el-form :model="addProductForm"  ref="addProductForm" >
-        <el-form-item label="图片" :label-width="formLabelWidth" prop="brandimgpath">
-          <div align="left">
-            <el-upload class="upload-demo" drag action="api/api/brand/uploadFile"
-                       :on-success="adduploadSuccess" :on-remove="addfiledelete"
-                       :file-list="filelist" ref="addupload"
-                       :before-upload="beforeAvatarUpload"
-                       multiple>
-              <div v-if="addProductForm.productimgpath==''">
-                <i class="el-icon-upload"></i>
-                <div class="el-upload__text">将图片拖到此处，或<em>点击上传</em></div>
-              </div>
-              <div v-else>
-                <img :src="addProductForm.productimgpath" width="360px" height="180px">
-              </div>
-            </el-upload>
-            <div style="margin-left: 80px" class="el-upload__tip" slot="tip">只能上传jpg/png文件，且不超过1024kb</div>
-          </div>
-        </el-form-item>
 
-      </el-form>
     </div>
 <!-- 操控步骤条   -->
       <div v-show="active==0" style="margin-left: 530px">
@@ -180,11 +170,6 @@
                 //笛卡尔积之后的SKU数据
                 DKRJData:[],
 
-
-                productpropertyinpiut:'',
-                productpropertyselect:'',
-                productpropertyradio:'',
-                productpropertycheckbox:[],
                 //添加商品的对象
                 addProductForm:{
                     productName:'',
@@ -192,14 +177,12 @@
                     productBrandId:'',
                     productDesc:'',
                     productPrice:'',
-                    productStock:'',
+                    productStocks:'',
                     productSortNum:'',
-                    productimgpath:'',
-                    productTypeid:'',
+                    productImgPath:'',
+                    productTypeId:'',
                 },
-                addProductPropertyForm:{
 
-                },
                 productPropertyCategory:'',
                 //商品品牌的数组
                 productBrand:[],
@@ -232,10 +215,25 @@
             //添加
             addProduct(){
                 var self=this;
-                this.addProductForm.productTypeid=this.productPropertyCategory;
+                this.addProductForm.productTypeId=this.productPropertyCategory;
+                let  propertys=[];
+                for (let i = 0; i <this.isNotSKU.length ; i++) {
+                    let  isNotSKUs={};
+                    isNotSKUs.propertyPrice=this.isNotSKU[i].checkboxValues;
+                    isNotSKUs.propertyid=this.isNotSKU[i].propertyid;
+                    //   console.log(this.isNotSKU[i].checkboxValues)
+                    // isNotSKUs[this.isNotSKU[i].name]=this.isNotSKU[i].checkboxValues;
+                    propertys.push(isNotSKUs);
+                }
+                this.addProductForm.property=JSON.stringify(propertys);
+                this.addProductForm.sku=JSON.stringify(this.DKRJData);
+                this.$axios.post("api/api/product/addProduct",this.$qs.stringify(this.addProductForm)).then(function (res) {
+                      if(res.data.code==110){
+                          self.$message({showClose:'true',message:'添加成功',type:'success'})
+                      }
+                  }).catch(function () {
 
-
-
+                  })
             },
 
 
@@ -260,7 +258,6 @@
                                       self.$axios.get("api/api/property/getPropertyPrice?propertyId="+propertydata[i].propertyid).then(function (res) {
                                           propertydata[i].values=res.data.data;
                                           propertydata[i].checkboxValues=[];
-                                          // propertydata[i].checkboxValues.propertyid=propertydata[i].propertyid
                                           self.isSKU.push(propertydata[i])
                                       })
                                   }else{
@@ -268,6 +265,7 @@
                                   }
                               }else if(propertydata[i].propertyisSKU==2){
                                   if (propertydata.propertytype!=4){
+                                      propertydata[i].checkboxValues=[];
                                       self.$axios.get("api/api/property/getPropertyPrice?propertyId="+propertydata[i].propertyid).then(function (res) {
                                           propertydata[i].values=res.data.data;
                                           self.isNotSKU.push(propertydata[i])
@@ -288,7 +286,6 @@
             },
             //触发笛卡尔积  复选框内容改变事件
             checkboxValuesChange(){
-                console.log(this.isSKU)
                 //清空动态列头
                 this.addProductTableCols=[];
                 this.DKRJData=[];
@@ -311,22 +308,21 @@
                     var DKRJData=this.calcDescartes(DKRJ);
                     //////
                     for (let i = 0; i <DKRJData.length ; i++) {
-                    if (this.isSKU.length==1){
-                        var valuesAttr=[];
-                        valuesAttr.push(DKRJData[i]);
-                    }else{
-                        var valuesAttr=DKRJData[i];
-                    }
+                        //只有一个sku复选框属性时
+                        if (this.isSKU.length==1){
+                            var valuesAttr=[];
+                            valuesAttr.push(DKRJData[i]);
+                        }else{
+                            var valuesAttr=DKRJData[i];
+                        }
                         //得到数据
                         var tableValue={};
                         for (let j = 0; j < valuesAttr.length; j++) {
+                            //+":"+this.addProductTableCols[j].propertyid
                             let key=this.addProductTableCols[j].propertyname;
                             tableValue[key]=valuesAttr[j];
                         }
                         this.DKRJData.push(tableValue);
-
-                        // console.log(this.addProductTableCols)
-                        // console.log(this.DKRJData)
                     }
                 }
             },
@@ -351,12 +347,12 @@
                 return isJPG && isLt2M;},
             //添加文件上传成功的钩子
             adduploadSuccess(response, file, fileList) {
-                this.addProductForm.productimgpath = response.data;
+                this.addProductForm.productImgPath = response.data;
                 this.$message.success("图片上传成功");
             },
             //添加文件列表移除文件时的钩子
             addfiledelete(file, fileList){
-                this.addProductForm.productimgpath='';
+                this.addProductForm.productImgPath='';
                 // this.$message.success("图片已清除111");
             },
             //分类name拼接

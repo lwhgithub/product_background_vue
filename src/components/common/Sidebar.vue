@@ -68,6 +68,11 @@ export default {
                     subs: [
                         {
                             icon:'el-icon-s-grid',
+                            index: 'showproduct',
+                            title: '商品展示'
+                        },
+                        {
+                            icon:'el-icon-s-grid',
                             index: 'productadd',
                             title: '添加商品'
                         },

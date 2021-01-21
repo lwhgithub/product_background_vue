@@ -21,6 +21,11 @@ export default new Router({
           meta: { title: '首页' }
         },
         {
+          path: '/showproduct',
+          component: () => import(/* webpackChunkName: "dashboard" */ '../components/product/ShowProduct.vue'),
+          meta: { title: '商品展示' }
+        },
+        {
           path: '/productadd',
           component: () => import(/* webpackChunkName: "dashboard" */ '../components/product/ProductAdd.vue'),
           meta: { title: '添加商品' }

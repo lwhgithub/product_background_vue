@@ -102,11 +102,11 @@
         <el-form-item label="价格" :label-width="formLabelWidth" prop="productPrice">
           <el-input-number v-model="updateProductForm.productPrice" :precision="2" :step="1" autocomplete="off"></el-input-number>
         </el-form-item>
-        <el-form-item label="排序" :label-width="formLabelWidth" prop="productSortNum">
-          <el-input-number v-model="updateProductForm.productSortNum" :step="1" autocomplete="off"></el-input-number>
-        </el-form-item>
         <el-form-item label="库存" :label-width="formLabelWidth" prop="productStocks">
           <el-input-number v-model="updateProductForm.productStocks" :step="10" autocomplete="off"></el-input-number>
+        </el-form-item>
+        <el-form-item label="排序" :label-width="formLabelWidth" prop="productSortNum">
+          <el-input-number v-model="updateProductForm.productSortNum" :step="1" autocomplete="off"></el-input-number>
         </el-form-item>
         <el-form-item label="品牌删除" :label-width="formLabelWidth" prop="productIsDel">
           <div align="left">

@@ -197,7 +197,6 @@
 
             };
         },
-
         methods: {
             //获取商品品牌
             getProductBrandData(){
@@ -219,12 +218,15 @@
                 let  propertys=[];
                 for (let i = 0; i <this.isNotSKU.length ; i++) {
                     let  isNotSKUs={};
+
+
                     isNotSKUs.propertyPrice=this.isNotSKU[i].checkboxValues;
                     isNotSKUs.propertyid=this.isNotSKU[i].propertyid;
-                    //   console.log(this.isNotSKU[i].checkboxValues)
-                    // isNotSKUs[this.isNotSKU[i].name]=this.isNotSKU[i].checkboxValues;
+
                     propertys.push(isNotSKUs);
+
                 }
+                    // console.log(propertys)
                 this.addProductForm.property=JSON.stringify(propertys);
                 this.addProductForm.sku=JSON.stringify(this.DKRJData);
                 this.$axios.post("api/api/product/addProduct",this.$qs.stringify(this.addProductForm)).then(function (res) {
@@ -232,12 +234,9 @@
                           self.$message({showClose:'true',message:'添加成功',type:'success'})
                       }
                   }).catch(function () {
-
+                    self.$message({showClose:'true',message:'添加失败',type:'error'})
                   })
             },
-
-
-
             //属性sku spu
             getPropertyData(productPropertyCategory){
                 //选择分类修改的时候，清空之前的SKU数据，并关闭表格
@@ -261,11 +260,14 @@
                                           self.isSKU.push(propertydata[i])
                                       })
                                   }else{
+                                      propertydata[i].checkboxValues=[];
                                       self.isSKU.push(propertydata[i])
                                   }
                               }else if(propertydata[i].propertyisSKU==2){
                                   if (propertydata.propertytype!=4){
+                                      if(propertydata[i].propertytype==3){
                                       propertydata[i].checkboxValues=[];
+                                      }
                                       self.$axios.get("api/api/property/getPropertyPrice?propertyId="+propertydata[i].propertyid).then(function (res) {
                                           propertydata[i].values=res.data.data;
                                           self.isNotSKU.push(propertydata[i])
@@ -326,8 +328,8 @@
                     }
                 }
             },
-             //笛卡尔积
-             calcDescartes (array) {
+            //笛卡尔积
+            calcDescartes (array) {
                   if (array.length < 2) return array[0] || [];
                   return [].reduce.call(array, function (col, set) {
                       var res = [];
@@ -342,8 +344,8 @@
             beforeAvatarUpload(file) {
                 const isJPG = file.type === 'image/jpeg';
                 const isLt2M = file.size / 1024 / 1024 < 1;
-                if (!isJPG) {this.$message.error('上传头像图片只能是 JPG 格式!');}
-                if (!isLt2M) {this.$message.error('上传头像图片大小不能超过 2MB!');}
+                if (!isJPG) {this.$message.error('上传图片只能是 JPG 格式!');}
+                if (!isLt2M) {this.$message.error('上传图片大小不能超过 2MB!');}
                 return isJPG && isLt2M;},
             //添加文件上传成功的钩子
             adduploadSuccess(response, file, fileList) {

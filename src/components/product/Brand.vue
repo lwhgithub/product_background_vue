@@ -342,7 +342,8 @@
         },
         created(){
           this.getData();
-        },watch:{
+        },
+        watch:{
             addbutton:function(){
                 if(this.addbutton==false){
                   this.addBrandForm={};

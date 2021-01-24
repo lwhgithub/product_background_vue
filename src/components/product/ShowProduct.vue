@@ -61,19 +61,23 @@
       <el-table-column prop="productSortNum" label="排许"></el-table-column>
       <el-table-column label="图片log">
         <template slot-scope="scope">
-          <img :src="scope.row.productImgPath" height="50px">
+          <div @click="abc(scope.row)">
+          <el-image :preview-src-list="srcList" :src="scope.row.productImgPath"></el-image>
+<!--          <img :src="scope.row.productImgPath" height="50px">-->
+        </div>
         </template>
       </el-table-column>
       <el-table-column label="操作">
         <template slot-scope="scope">
           <el-row>
             <el-button type="primary" icon="el-icon-edit" @click="hx(scope.row)" circle></el-button>
+            <el-button type="primary" @click="sxwh(scope.row)">属性维护</el-button>
           </el-row>
         </template>
       </el-table-column>
     </el-table>
-    <!--  修改-->
-    <el-dialog title="修改" :visible.sync="updatebutton">
+    <!--  基本信息修改-->
+    <el-dialog title="基本信息修改" :visible.sync="updatebutton">
       <!--      表单部分-->
       <el-form :model="updateProductForm"  ref="updateProductForm" >
         <el-form-item label="名称" :label-width="formLabelWidth" prop="productName">
@@ -115,11 +119,16 @@
           </div>
         </el-form-item>
         <el-form-item label="原图片" :label-width="formLabelWidth">
-          <div v-if="this.updateProductForm.newproductImgPath==''" align="left">
-            <img :src="updateProductForm.productImgPath" width="360px" height="180px"/>
+          <div v-if="this.updateProductForm.productImgPath!=''">
+            <div v-if="this.updateProductForm.newproductImgPath==''" align="left">
+              <img :src="updateProductForm.productImgPath" width="360px" height="180px"/>
+            </div>
+            <div v-else align="left">
+              <img :src="updateProductForm.productImgPath" width="360px" height="180px"/>
+            </div>
           </div>
-          <div v-else align="left">
-            <img :src="updateProductForm.productImgPath" width="360px" height="180px"/>
+          <div v-else>
+            <h4>无图片</h4>
           </div>
         </el-form-item>
         <el-form-item label="新图片" :label-width="formLabelWidth" prop="brandimgpath">
@@ -143,8 +152,83 @@
       </el-form>
       <!--      按钮部分-->
       <div slot="footer" class="dialog-footer">
-        <el-button @click="updateoff('updateProductForm')">取 消</el-button>
-        <el-button type="primary" @click="updateBrand()">确 定</el-button>
+        <el-button @click="updatebutton=false">取 消</el-button>
+        <el-button type="primary" @click="updateProduct()">确 定</el-button>
+      </div>
+    </el-dialog>
+    <!--  商品属性修改  -->
+    <el-dialog title="属性信息修改" :visible.sync="updatepropertybutton">
+      <!--      表单部分-->
+      <el-form :model="updateProductForm"  ref="updateProductForm" >
+        <el-form-item label="属性分类" :label-width="formLabelWidth" prop="propertytypeId" >
+          <div align="left">
+            <el-select v-model="productPropertyCategorySX" placeholder="属性分类" @change="getPropertyData(productPropertyCategorySX)" style="width:300px">
+              <el-option :label="category.name" :value="category.id" v-for="(category,index) in categoryTypes" :key="index"></el-option>
+            </el-select>
+          </div>
+        </el-form-item>
+        <!--    商品参数-->
+        <el-form-item v-if="isSKU.length>0" label="商品参数" :label-width="formLabelWidth">
+          <el-form-item v-for="issk in  isSKU" :key="issk.propertyid" :label="issk.propertynameCH" label-width="100px">
+            <!--                       复选框-->
+            <el-checkbox-group v-if="issk.propertytype==3" v-model="issk.checkboxValues" @change="checkboxValuesChange">
+              <el-checkbox v-for="valu in issk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceNameCH"></el-checkbox>
+            </el-checkbox-group>
+          </el-form-item>
+        </el-form-item>
+        <!--    表格-->
+        <el-form-item v-show="productDKRJTable" label="商品参数" :label-width="formLabelWidth">
+          <el-table :data="DKRJData" border style="width: 100%;" >
+            <el-table-column label="序号" width="40px" >
+              <template slot-scope="scope">
+                {{ scope.$index+1}}
+              </template>
+            </el-table-column>
+            <el-table-column v-for="(c,index) in addProductTableCols" :key="index"
+                             :label="c.propertynameCH" :prop="c.propertyname">
+
+            </el-table-column>
+
+            <el-table-column prop="productPrice" label="价格">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.productPrice"/>
+              </template>
+            </el-table-column>
+            <el-table-column prop="productStocks" label="库存">
+              <template slot-scope="scope">
+                <el-input v-model="scope.row.productStocks"/>
+              </template>
+            </el-table-column>
+          </el-table>
+        </el-form-item>
+        <!--      商品规格-->
+        <el-form-item v-if="isNotSKU.length>0" label="商品规格" :label-width="formLabelWidth">
+          <el-form-item v-for="isNotsk in  isNotSKU" :key="isNotsk.propertyid" :label="isNotsk.propertynameCH" label-width="100px">
+            <template slot-scope="scope">
+              <!--           输入框-->
+              <el-input v-if="isNotsk.propertytype==4"  v-model="isNotsk.checkboxValues" ></el-input>
+              <!--           下拉框-->
+              <el-select v-if="isNotsk.propertytype==1" placeholder="请选择"  v-model="isNotsk.checkboxValues">
+                <el-option v-for="(valu,index) in isNotsk.values" :key="index" :label="valu.propertyPriceNameCH" :value="valu.propertyPriceId" ></el-option>
+              </el-select>
+              <!--           单选框-->
+              <el-radio-group v-if="isNotsk.propertytype==2" v-model="isNotsk.checkboxValues">
+                <el-radio v-for="valu in isNotsk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceNameCH"></el-radio>
+              </el-radio-group>
+              <!--           复选框-->
+              <el-checkbox-group v-if="isNotsk.propertytype==3" v-model="isNotsk.checkboxValues">
+                <el-checkbox v-for="valu in isNotsk.values" :key="valu.propertyPriceId" :label="valu.propertyPriceNameCH" naem="type"></el-checkbox>
+              </el-checkbox-group>
+            </template>
+          </el-form-item>
+        </el-form-item>
+
+
+      </el-form>
+      <!--      按钮部分-->
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="updatepropertybutton=false">取 消</el-button>
+        <el-button type="primary" @click="updateproperty()">确 定</el-button>
       </div>
     </el-dialog>
   </div>
@@ -159,7 +243,9 @@
                 productBrand:[],
                 // 控制修改的表单
                 updatebutton:false,
-                // 修改表单数据
+                //控制修改属性的弹框
+                updatepropertybutton:false,
+                //修改商品基本信息表单数据
                 updateProductForm:{
                     productId:'',
                     productName:'',
@@ -174,6 +260,21 @@
                     productIsDel:'',
                     newproductImgPath:'',
                 },
+//              修改商品属性信息
+                //sku属性数据
+                isNotSKU:[],
+                //非sku属性
+                isSKU:[],
+                //笛卡尔积数据展示表格
+                productDKRJTable:false,
+                //添加商品动态表格头
+                addProductTableCols:[],
+                //笛卡尔积之后的SKU数据
+                DKRJData:[],
+                //修改商品属性信息的商品分类
+                productPropertyCategorySX:'',
+//查询
+                srcList:[],
                 // 查询结果
                 productddata:[],
                 //分页条件查询
@@ -187,6 +288,7 @@
                     productBrandId:'',
                     productTypeId:'',
                 },
+//公共
                 //宽度
                 formLabelWidth: '120px',
                 // 头部复选框
@@ -202,6 +304,10 @@
             }
         },
         methods:{
+            abc(row){
+                this.srcList=[];
+               this.srcList.push(row.productImgPath);
+            },
             //获取商品基本信息
             getProductData(){
                 var self=this;
@@ -260,12 +366,8 @@
                 this.updateProductForm.newproductImgPath='';
                 this.updatebutton=true;
             },
-            // 修改取消
-            updateoff(aa){
-                this.updatebutton=false;
-            },
-            // 修改
-            updateBrand(){
+            // 修改商品基本信息
+            updateProduct(){
                 this.updateProductForm.productTypeId=this.productPropertyCategory
                 var self = this;
                 this.$axios.put("api/api/product/updateProduct", this.$qs.stringify(this.updateProductForm)).then(function (res) {
@@ -280,6 +382,107 @@
                     }
                 })
             },
+            //修改商品属性信息
+            sxwh(row){
+                this.productPropertyCategorySX=row.productTypeId;
+                this.getPropertyData(this.productPropertyCategorySX)
+                this.updatepropertybutton=true;
+            },
+            //属性sku spu
+            getPropertyData(productPropertyCategorySX){
+                //选择分类修改的时候，清空之前的SKU数据，并关闭表格
+                this.addProductTableCols=[];
+                this.DKRJData=[];
+                this.productDKRJTable=false;
+                //清空属性数据
+                this.isNotSKU=[];
+                this.isSKU=[];
+                var self=this;
+                this.$axios.get("api/api/property/getPropertyDataByCategoryId?propertytypeId="+productPropertyCategorySX).then(function (res) {
+                    if(res.data.code==110){
+                        let propertydata =res.data.data;
+                        if(propertydata.length>0){
+                            for (let i = 0; i < propertydata.length; i++) {
+                                if(propertydata[i].propertyisSKU==1){
+                                    if (propertydata.propertytype!=4){
+                                        self.$axios.get("api/api/property/getPropertyPrice?propertyId="+propertydata[i].propertyid).then(function (res) {
+                                            propertydata[i].values=res.data.data;
+                                            propertydata[i].checkboxValues=[];
+                                            self.isSKU.push(propertydata[i])
+                                        })
+                                    }else{
+                                        propertydata[i].checkboxValues=[];
+                                        self.isSKU.push(propertydata[i])
+                                    }
+                                }else if(propertydata[i].propertyisSKU==2){
+                                    if (propertydata.propertytype!=4){
+                                        if(propertydata[i].propertytype==3){
+                                            propertydata[i].checkboxValues=[];
+                                        }
+                                        self.$axios.get("api/api/property/getPropertyPrice?propertyId="+propertydata[i].propertyid).then(function (res) {
+                                            propertydata[i].values=res.data.data;
+                                            self.isNotSKU.push(propertydata[i])
+                                        })
+                                    }else{
+                                        self.isNotSKU.push(propertydata[i])
+                                    }
+                                }
+                            }
+                        }else{
+                            self.isNotSKU=[];
+                            self.isSKU=[];
+                        }
+                    }else if(res.data.code==120){
+                        self.$message({showClose:true,message:res.data.message,type:'error'})
+                    }
+                })
+            },
+            //触发笛卡尔积  复选框内容改变事件
+            checkboxValuesChange(){
+                //清空动态列头
+                this.addProductTableCols=[];
+                this.DKRJData=[];
+                this.productDKRJTable=true;
+                for (let i = 0; i <this.isSKU.length ; i++) {
+                    //循环选中的复选框数组，决定是否进行笛卡尔积
+                    if(this.isSKU[i].checkboxValues.length==0){
+                        this.productDKRJTable=false;
+                        break;
+                    }
+                    //添加动态列头名称
+                    this.addProductTableCols.push({"propertyid":this.isSKU[i].propertyid,"propertynameCH":this.isSKU[i].propertynameCH,"propertyname":this.isSKU[i].propertyname});
+                }
+                if(this.productDKRJTable==true){
+                    var DKRJ =[];
+                    for (let i = 0; i <this.isSKU.length; i++) {
+                        DKRJ.push(this.isSKU[i].checkboxValues)
+                    }
+                    //调用笛卡尔积方法 获取数据
+                    var DKRJData=this.calcDescartes(DKRJ);
+                    //////
+                    for (let i = 0; i <DKRJData.length ; i++) {
+                        //只有一个sku复选框属性时
+                        if (this.isSKU.length==1){
+                            var valuesAttr=[];
+                            valuesAttr.push(DKRJData[i]);
+                        }else{
+                            var valuesAttr=DKRJData[i];
+                        }
+                        //得到数据
+                        var tableValue={};
+                        for (let j = 0; j < valuesAttr.length; j++) {
+                            //+":"+this.addProductTableCols[j].propertyid
+                            let key=this.addProductTableCols[j].propertyname;
+                            tableValue[key]=valuesAttr[j];
+                        }
+                        this.DKRJData.push(tableValue);
+                    }
+                }
+            },
+
+
+
+            //图片上传验证
             beforeAvatarUpload(file) {
                 const isJPG = file.type === 'image/jpeg';
                 const isLt2M = file.size / 1024 / 1024 < 1;
@@ -306,12 +509,12 @@
             handleSizeChange(val) {
                 this.paging.pagingSize=(val);
                 this.paging.pagingStart=0;
-                this.getData();
+                this.getProductData();
             },
             //切换第几页时触发
             handleCurrentChange(val) {
                 this.paging.pagingStart=(val-1)*this.paging.pagingSize;
-                this.getData();
+                this.getProductData();
             },
             //当选中复选框时触发该事件
             handleSelectionChange(val) {

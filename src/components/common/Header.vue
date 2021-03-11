@@ -70,7 +70,8 @@ export default {
         handleCommand(command) {
             if (command == 'loginout') {
                 localStorage.removeItem('ms_username');
-                this.$router.push('/login');
+                window.sessionStorage.removeItem('token')
+                this.$router.push("/login")
             }
         },
         // 侧边栏折叠

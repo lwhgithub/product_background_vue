@@ -260,7 +260,7 @@
                     productIsDel:'',
                     newproductImgPath:'',
                 },
-//              修改商品属性信息
+//修改商品属性信息
                 //sku属性数据
                 isNotSKU:[],
                 //非sku属性
@@ -306,7 +306,7 @@
         methods:{
             abc(row){
                 this.srcList=[];
-               this.srcList.push(row.productImgPath);
+                this.srcList.push(row.productImgPath);
             },
             //获取商品基本信息
             getProductData(){
@@ -479,8 +479,6 @@
                     }
                 }
             },
-
-
 
             //图片上传验证
             beforeAvatarUpload(file) {

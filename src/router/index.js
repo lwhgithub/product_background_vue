@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Router from 'vue-router'
 
+import Login from '@/components/product/Login'
 
 Vue.use(Router)
 
@@ -11,6 +12,11 @@ export default new Router({
       redirect: '/producthomepage'
     },
     {
+      path: '/Login',
+      name: 'Login',
+      component: Login,
+    },
+    {
       path: '/',
       component: () => import(/* webpackChunkName: "home" */ '../components/common/Home.vue'),
       meta: { title: '系统首页' },
@@ -18,7 +24,7 @@ export default new Router({
         {
           path: '/producthomepage',
           component: () => import(/* webpackChunkName: "dashboard" */ '../components/page/ProductHomePage.vue'),
-          meta: { title: '首页' }
+          meta: { title: '系统首页' }
         },
         {
           path: '/showproduct',
@@ -54,6 +60,11 @@ export default new Router({
           path: '/icon',
           component: () => import(/* webpackChunkName: "icon" */ '../components/page/Icon.vue'),
           meta:{ title:'自定义图标'}
+        },
+        {
+          path: '/user',
+          component: () => import(/* webpackChunkName: "icon" */ '../components/user/User.vue'),
+          meta:{ title:'用户信息'}
         },
       ]
     },

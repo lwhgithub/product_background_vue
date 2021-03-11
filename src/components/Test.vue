@@ -1,74 +1,59 @@
 <template>
   <div>
-    <el-steps :active="active" finish-status="success">
-      <el-step title="基本信息"></el-step>
-      <el-step title="商品属性"></el-step>
-      <el-step title="商品图片"></el-step>
-    </el-steps>
+    <h1>商品列表</h1>
+    <el-table
+      :data="tableData"
+      border
+      style="width: 100%">
+      <el-table-column
+        prop="id"
+        label="序号"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="name"
+        label="名称"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="price"
+        label="价格"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="imgPath"
+        label="图片"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="band"
+        label="品牌"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="type"
+        label="分类"
+        width="150">
+      </el-table-column>
+      <el-table-column
+        prop="storck"
+        label="库存"
+        width="150">
+      </el-table-column>
 
-    <br/>
-    <br/>
-    <br/>
-    <div v-if="active==0">
-      <el-form :model="productForm" :rules="rules" ref="productForm" label-width="100px" class="demo-ruleForm">
-        <el-form-item label="商品名称" prop="name">
-          <el-input v-model="productForm.name"></el-input>
-        </el-form-item>
-
-        <el-form-item label="标题" prop="title">
-          <el-input v-model="productForm.title"></el-input>
-        </el-form-item>
-
-        <el-form-item label="品牌" prop="bandId">
-          <el-select v-model="productForm.bandId" placeholder="请选择">
-            <el-option v-for="b in brandDatas" :key="b.id" :label="b.name" :value="b.id"></el-option>
-          </el-select>
-        </el-form-item>
-
-        <el-form-item label="简介" prop="productdecs">
-          <el-input type="textarea" v-model="productForm.productdecs"></el-input>
-        </el-form-item>
-
-        <el-form-item label="价格" prop="price">
-          <el-input-number v-model="productForm.price" :precision="2" :step="0.1"></el-input-number>
-        </el-form-item>
-
-        <el-form-item label="库存" prop="stocks">
-          <template>
-            <el-input-number v-model="productForm.stocks" :step="10"></el-input-number>
-          </template>
-        </el-form-item>
-
-        <el-form-item label="排序" prop="sortNum">
-          <template>
-            <el-input-number v-model="productForm.sortNum" :step="1"></el-input-number>
-          </template>
-        </el-form-item>
-
-        <!-- 图片插件  -->
-        <el-form-item label="主图" prop="imgPath">
-          <el-upload
-            class="avatar-uploader"
-            action="http://localhost:8080/api/band/uploadFile"
-            :show-file-list="false"
-            :on-success="handleAvatarSuccess"
-            :before-upload="beforeAvatarUpload">
-            <img v-if="imageUrl" :src="imageUrl" class="avatar">
-            <i v-else class="el-icon-plus avatar-uploader-icon"></i>
-          </el-upload>
-        </el-form-item>
-
-        <el-form-item>
-          <el-button>重置</el-button>
-          <el-button type="primary" @click="next">下一步</el-button>
-        </el-form-item>
-      </el-form>
+      <el-table-column
+        label="操作">
+        <template slot-scope="scope">
+          <el-button @click="handleClick(scope.row)" type="text" size="small">查看</el-button>
+          <el-button type="text" size="small" @click="showAttrInfo(scope.row.typeId,scope.row.id)">属性维护</el-button>
+        </template>
+      </el-table-column>
+    </el-table>
 
 
 
-    </div>
-    <div v-if="active==1">
 
+    <el-dialog title="属性信息" :visible.sync="attrShow">
 
       <el-form :model="productForm2" label-width="100px" class="demo-ruleForm">
 
@@ -148,41 +133,31 @@
           </el-form-item>
 
         </el-form-item>
-
-        <el-button type="primary" @click="active--">上一步</el-button>
-        <el-button type="primary" @click="addProduct">添加</el-button>
       </el-form>
 
 
+      <div slot="footer" class="dialog-footer">
+        <el-button @click="attrShow = false">取 消</el-button>
+        <el-button type="primary" @click="dialogFormVisible = false">确 定</el-button>
+      </div>
+    </el-dialog>
 
-    </div>
-    <div v-if="active==2">
-      第三步信息
-    </div>
+
+
   </div>
 </template>
 
 <script>
     export default {
-        name: "AddProduct",
-        data() {
-            return {
-                active: 0,//步骤条的
-                /* 第一步相关的数据 */
-                productForm:{ // 商品的基本
-                    name:"",
-                    title:"",
-                    bandId:"",
-                    productdecs:"",
-                    price:0,
-                    stocks:0,
-                    sortNum:0,
-                    imgPath:""
-                },
-                rules:{},// 商品表单的验证规则
-                imageUrl:"",//图片显示用的
+        name: "ShopProduct",
+        data(){
+            return{
+                tableData:[],
+                attrShow:false,
 
-                brandDatas:[], // 品牌数据   从接口拿数据
+
+
+
                 /* 第二步相关的数据  */
                 productForm2:{},
                 ajaxTypeData:[], //接口返回的数据
@@ -205,41 +180,24 @@
                 tableShow:false, //sku的table是否显示
                 cols:[],//skutable的动态表头
                 tableSkuData:[],//skutable的动态表头对应的表格数据
-                /*   看效果用的  */
-                storcks:"", // 库存
-                pricess:"", //  价格
-                aaa:"",
-                bbb:"",
-                ccc:"",
-            };
+
+
+
+
+            }
         },
         methods:{
-            //添加商品
-            addProduct:function(){
-                //商品的类型id 添加到productform
-                this.productForm.typeId=this.productForm2.typeId;
-                console.log(this.productForm);
-                //非sku的数据
-                console.log(this.attData); //[{id: c,namech:系统,name:system,ckvaluwse:ios},{},{}]
-                //sku数据
-                console.log(this.tableSkuData);
-                debugger;
-                //声明后台接参的atrr
-                let  atrrs=[];
-                for (let i = 0; i <this.attData.length ; i++) {
-                    let  attData={};
-                    attData[this.attData[i].name]=this.attData[i].ckValues;
-                    atrrs.push(attData);
-                }
+            showAttrInfo:function (typeId,pid) {
+                this.attrShow=true;
+                //初始化分类数据
+                this.formaterTypeData();
+                //回显分类id
+                this.productForm2.typeId=typeId;
+                //回显属性数据
+                this.getAttrData(typeId,pid);
 
-                this.productForm.attr=JSON.stringify(atrrs);
-                this.productForm.sku=JSON.stringify(this.tableSkuData); //传参是string   怎么将js json 转为字符串
-                console.log(this.$qs.stringify(this.productForm));
-                //发起请求  保存数据
-                this.$ajax.post("http://localhost:8080/api/product/add",this.$qs.stringify(this.productForm)).then(res=>{
-                    this.$message.success("添加成功");
-                })
             },
+
             /* 笛卡尔积    */
             calcDescartes:function(array) {
                 if (array.length < 2) return array[0] || [];
@@ -266,6 +224,11 @@
                 // console.log(this.SKUData);
                 //判断是否要生成笛卡尔积
                 let flag=true;
+
+
+
+
+
                 //遍历sku所有数据
                 for (let i = 0; i <this.SKUData.length ; i++) {
                     //将sku属性 放入动态表头中
@@ -306,55 +269,144 @@
                 this.tableShow=flag;
             },
             /*   根据typeid 查询属性数据和sku数据  */
-            getAttrData:function(typeId){
-                this.SKUData=[];
-                this.attData=[];
-                //发起请求 拿到属性数据
-                this.$ajax.get("http://localhost:8080/api/attr/queeryDataByTypeId?typeId="+typeId).then(res=>{
-                    // 所有的属性数据
-                    let attrDatas=res.data.data;  // 所有的属性数据    id  name  type   如果为 下拉框 单选框  复选框  values
-                    //判断分类是否有数据   更新 参数和规格
-                    if(attrDatas.length>0){
-                        //初始化  attData      SKUData
-                        for (let i = 0; i <attrDatas.length ; i++) {
-                            //判断是否为sku属性
-                            if(attrDatas[i].isSKU==0){
+            getAttrData:function(typeId,pid){
 
-                                if(attrDatas[i].type!=3){
-                                    //发起请求 查询此属性对应的选项值
-                                    this.$ajax.get("http://localhost:8080/api/attrvalue/queryDataByAid?aid="+attrDatas[i].id).then(res=>{
-                                        attrDatas[i].values=res.data.data;
+                //查询回显的属性数据
+                this.$ajax.get("http://localhost:8080/api/product/queryProductAttrDataByPid?pid="+pid).then(res=>{
+                    let datas=res.data.data;
+                    this.SKUData=[];
+                    this.attData=[];
+                    //发起请求 拿到属性数据
+                    this.$ajax.get("http://localhost:8080/api/attr/queeryDataByTypeId?typeId="+typeId).then(res=>{
+                        // 所有的属性数据
+                        // debugger;
+                        let attrDatas=res.data.data;  // 所有的属性数据    id  name  type   如果为 下拉框 单选框  复选框  values
+                        //判断分类是否有数据   更新 参数和规格
+                        if(attrDatas.length>0){
+                            //初始化  attData      SKUData
+                            for (let i = 0; i <attrDatas.length ; i++) {
+                                //判断是否为sku属性
+                                if(attrDatas[i].isSKU==0){
 
+                                    if(attrDatas[i].type!=3){
+
+                                        //回显
+                                        if(attrDatas[i].type==2){
+                                            if(this.getValeu(attrDatas[i].name,datas)==""){
+                                                attrDatas[i].ckValues=[];
+                                            }else{
+                                                attrDatas[i].ckValues=this.getValeu(attrDatas[i].name,datas);
+                                            }
+                                        }else{
+                                            attrDatas[i].ckValues=this.getValeu(attrDatas[i].name,datas);
+                                        }
+
+
+                                        //发起请求 查询此属性对应的选项值
+                                        this.$ajax.get("http://localhost:8080/api/attrvalue/queryDataByAid?aid="+attrDatas[i].id).then(res=>{
+                                            attrDatas[i].values=res.data.data;
+
+                                            this.attData.push(attrDatas[i]);
+                                        })
+                                    }else{
+                                        attrDatas[i].ckValues=this.getValeu(attrDatas[i].name,datas);
                                         this.attData.push(attrDatas[i]);
-                                    })
-                                }else{
-                                    this.attData.push(attrDatas[i]);
-                                }
+                                    }
 
-                            }else{
-                                if(attrDatas[i].type!=3){
-                                    //发起请求 查询此属性对应的选项值
-                                    this.$ajax.get("http://localhost:8080/api/attrvalue/queryDataByAid?aid="+attrDatas[i].id).then(res=>{
-                                        attrDatas[i].values=res.data.data;
+                                }else{
+                                    if(attrDatas[i].type!=3){
+
+                                        //回显
+                                        if(attrDatas[i].type==2){
+                                            if(this.getValeu(attrDatas[i].name,datas)==""){
+                                                attrDatas[i].ckValues=[];
+                                            }else{
+                                                attrDatas[i].ckValues=this.getValeu(attrDatas[i].name,datas);
+                                            }
+                                        }else{
+                                            attrDatas[i].ckValues=this.getValeu(attrDatas[i].name,datas);
+                                        }
+
+                                        //发起请求 查询此属性对应的选项值
+                                        this.$ajax.get("http://localhost:8080/api/attrvalue/queryDataByAid?aid="+attrDatas[i].id).then(res=>{
+                                            attrDatas[i].values=res.data.data;
+                                            // debugger;
+                                            attrDatas[i].ckValues=this.getValeu(attrDatas[i].name,datas);
+                                            this.SKUData.push(attrDatas[i]);
+                                        })
+                                    }else{
                                         attrDatas[i].ckValues=[];
-
                                         this.SKUData.push(attrDatas[i]);
-                                    })
-                                }else{
-                                    attrDatas[i].ckValues=[];
-                                    this.SKUData.push(attrDatas[i]);
+                                    }
+
                                 }
-
                             }
+                        }else{
+                            this.SKUData=[];
+                            this.attData=[];
                         }
-                    }else{
-                        this.SKUData=[];
-                        this.attData=[];
-                    }
 
 
+                    })
+                    console.log(this.attData);
+                    console.log(this.SKUData);
                 })
-                //console.log(this.attData);
+
+
+            },
+
+
+            getValeu:function(key,data){
+                //data 回显数据   [{},{}]
+                /*key
+                *
+                *  [
+              {
+                  "id": 11,
+                  "proId": 12,
+                  "attrData": "{\"factory\":\"擦\"}",
+                  "storcks": null,
+                  "price": null
+              },
+              {
+                  "id": 12,
+                  "proId": 12,
+                  "attrData": "{\"system\":\"苹果系统\"}",
+                  "storcks": null,
+                  "price": null
+              },
+              {
+                  "id": 13,
+                  "proId": 12,
+                  "attrData": "{\"cpu\":\"骁龙1000\"}",
+                  "storcks": null,
+                  "price": null
+              },
+              {
+                  "id": 14,
+                  "proId": 12,
+                  "attrData": "{\"memsize\":\"16G\",\"pricess\":\"111\",\"color\":\"绿色\",\"netType\":\"联通\",\"storcks\":\"111\"}",
+                  "storcks": null,
+                  "price": null
+              },
+              {
+                  "id": 15,
+                  "proId": 12,
+                  "attrData": "{\"memsize\":\"16G\",\"pricess\":\"22\",\"color\":\"红色\",\"netType\":\"联通\",\"storcks\":\"222\"}",
+                  "storcks": null,
+                  "price": null
+              }
+          ]
+                * */
+                debugger;
+                for (let i = 0; i <data.length ; i++) {
+                    //得到一个数据 将字符串转为json
+                    let  objData=JSON.parse(data[i].attrData);
+                    if(objData[key]!=null){
+                        return objData[key];
+                    }
+                }
+                return "";
             },
             //初始化品牌数据
             initBandData:function(){
@@ -366,7 +418,6 @@
             //处理分类的下拉框   [{id:1,"name":"",pid:2},{}]
             // {"id":7,name:"分类/电子产品/手机"},
             formaterTypeData:function(){
-
                 this.$ajax.get("http://localhost:8080/api/type/getData").then(res=>{
 
                     // [{id:1,"name":"",pid:2},{}]
@@ -424,61 +475,18 @@
             },
 
 
-            /*  步骤条  下一页  */
-            next() {
-                this.formaterTypeData();
-                if (this.active++ > 1) this.active = 0;
-            },
-            handleAvatarSuccess(res, file) {
-                debugger;
-                //打断点 看怎么取返回值
-                this.productForm.imgPath=res.data;
-                //显示赋值
-                this.imageUrl=res.data;
-            },
-            beforeAvatarUpload(file) {
-                //限制类型    name  来限制
-                const isJPG = file.type === 'image/jpeg';
-                const isLt2M = file.size / 1024 / 1024 < 4;
 
-                if (!isJPG) {
-                    this.$message.error('上传头像图片只能是 JPG 格式!');
-                }
-                if (!isLt2M) {
-                    this.$message.error('上传头像图片大小不能超过 2MB!');
-                }
-                return isJPG && isLt2M;
-            },
+
+
         },
-        created:function () {
-            //初始化 品牌数据
-            this.initBandData();
+        created:function(){
+            this.$ajax.get("http://localhost:8080/api/product/queryAllData").then(res=>{
+                this.tableData=res.data.data;
+            })
         }
     }
 </script>
 
 <style scoped>
-  .avatar-uploader .el-upload {
-    border: 1px dashed #d9d9d9;
-    border-radius: 6px;
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-  }
-  .avatar-uploader .el-upload:hover {
-    border-color: #409EFF;
-  }
-  .avatar-uploader-icon {
-    font-size: 28px;
-    color: #8c939d;
-    width: 178px;
-    height: 178px;
-    line-height: 178px;
-    text-align: center;
-  }
-  .avatar {
-    width: 178px;
-    height: 178px;
-    display: block;
-  }
+
 </style>

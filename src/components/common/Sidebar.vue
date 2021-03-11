@@ -62,6 +62,18 @@ export default {
                     title: '系统首页'
                 },
                 {
+                    icon: 'el-icon-user-solid',
+                    index: '1',
+                    title: '用户管理',
+                    subs: [
+                        {
+                            icon:'el-icon-s-grid',
+                            index: 'user',
+                            title: '用户信息'
+                        },
+                    ]
+                },
+                {
                     icon: 'el-icon-s-shop',
                     index: '2',
                     title: '商品管理',

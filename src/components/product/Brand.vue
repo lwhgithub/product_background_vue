@@ -213,6 +213,7 @@
             getData(){
               var self=this;
               this.$axios.get("api/api/brand/getData?"+this.$qs.stringify(this.paging)).then(function (res) {
+              // this.$axios.get("http://localhost:8111/api/brand/getData?"+this.$qs.stringify(this.paging)).then(function (res) {
                   if(res.data.code==110){
                       self.brand=res.data.data.brandlist;
                       self.total=res.data.data.count;
@@ -275,6 +276,7 @@
             },
             // 修改取消
             updateoff(aa){
+                this.$refs.updateupload.clearFiles();
                 this.updatebutton=false;
             },
             // 修改
